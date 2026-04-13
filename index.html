@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPI Dashboard from Google Sheet</title>
+    <!-- Embedded jsPDF and jspdf-autotable content -->
+    <script>
+        // jspdf.umd.min.js content
+        ${JSPDF_CONTENT}
+    </script>
+    <script>
+        // jspdf-autotable.min.js content
+        ${JSPDF_AUTOTABLE_CONTENT}
+    </script>
+    <style>
+        body {font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #333; text-align: center; }
+        .filters { display: flex; justify-content: space-around; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; padding: 15px; border: 1px solid #eee; border-radius: 5px; background: #f9f9f9; }
+        .filter-group label { margin-right: 10px; font-weight: bold; }
+        input[type="text"] { margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 300px; }
+        button { padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        button:hover { background-color: #0056b3; }
+        .dashboard-section { border: 1px solid #ddd; padding: 15px; margin-top: 20px; border-radius: 5px; background: #fff; }
+        .kpi-list ul { list-style-type: none; padding: 0; }
+        .kpi-list li { background: #e9e9e9; margin-bottom: 8px; padding: 10px; border-radius: 4px; }
+        .kra-list-item { margin-bottom: 5px; }
+        .status-message { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .status-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status-info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+
+        /* Modal styles */
+        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); justify-content: center; align-items: center; }
+        .modal-content { background-color: #fefefe; margin: auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; position: relative; }
+        .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-button:hover, .close-button:focus { color: black; text-decoration: none; cursor: pointer; }
+        .modal-content label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .modal-content input[type="text"] { width: calc(100% - 22px); padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; }
+        .modal-footer { text-align: right; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Employee KPI Dashboard (Google Sheet Data)</h1>
+
+        <div id="statusMessage" class="status-message status-info" style="display: none;"></div>
+
+        <div class="filters">
+
+            <div class="filter-group">
+                <label for="managementLevel">Management Level:</label>
+                <select id="managementLevel" onchange="updateDashboard()">
+                    <option value="">All Levels</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="department">Department:</label>
+                <select id="department" onchange="updateDashboard()">
+                    <option value="">All Departments</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="bscArea">BSC Area Focus:</label>
+                <select id="bscArea" onchange="updateDashboard()">
+                    <option value="">All Areas</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <h2>Key Result Areas (KRAs): <small>(Select to filter KPIs)</small></h2>
+            <div class="kra-list" id="kraDisplayArea">
+                <p>*Load data and select filters to see KRAs*</p>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <h2>Selected KPIs:</h2>
+            <div class="kpi-list" id="kpiDisplayArea">
+                <ul>
+                    <li>*Load data and select filters to see KPIs*</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <button onclick="showJdForm()">Download Job Description (JD)</button>
+        </div>
+    </div>
+
+    <!-- JD Download Modal -->
+    <div id="jdModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="hideJdForm()">&times;</span>
+            <h2>Generate Job Description (JD)</h2>
+            <label for="employeeName">Employee Name:</label>
+            <input type="text" id="employeeName" placeholder="Enter Employee Name">
+            <label for="employeeId">Employee ID:</label>
+            <input type="text" id="employeeId" placeholder="Enter Employee ID">
+            <div class="modal-footer">
+                <button onclick="generateJdPdf()">Download JD as PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allKpiData = []; // Store the parsed data globally
+        let currentFilteredDataByTopLevel = []; // Global to store data filtered by top-level dropdowns
+        const ENCODED_GOOGLE_SHEET_URL = 'aHR0cHM6Ly9kb2NzLmdvb2dsZS5jb20vc3ByZWFkc2hlZXRzL2QvMWhRWDFOTVNfZGhNQlg4OGtwMG93MG50WEwxU2h4LUh4aWU1N2JSX195aGMvZWRpdD91c3A9c2hhcmluZw==';
+        const DEFAULT_GOOGLE_SHEET_URL = atob(ENCODED_GOOGLE_SHEET_URL); // Decode in JavaScript
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message status-${type}`;
+            statusDiv.style.display = 'block';
+        }
+
+        function hideStatus() {
+            document.getElementById('statusMessage').style.display = 'none';
+        }
+
+        function populateDropdown(selectId, dataColumn, data) {
+            const selectElement = document.getElementById(selectId);
+            const currentValue = selectElement.value; // Store current selected value
+            selectElement.innerHTML = '<option value="">All ' + selectId.replace(/([A-Z])/g, ' $1').trim() + 's</option>';
+            const uniqueValues = [...new Set(data.map(item => item[dataColumn]))].sort();
+            uniqueValues.forEach(value => {
+                if (value && value.trim() !== '') {
+                    const option = document.createElement('option');
+                    option.value = value;
+                    option.textContent = value;
+                    selectElement.appendChild(option);
+                }
+            });
+            // Attempt to restore the previously selected value, if it still exists
+            if ([...uniqueValues, ''].includes(currentValue)) {
+                selectElement.value = currentValue;
+            }
+        }
+
+        // Function to update only the KRA checkboxes (used when top-level filters change)
+        function updateKraCheckboxes(dataToDisplayKRAs, selectedKRAsToPreserve = []) {
+            const kraDisplayArea = document.getElementById('kraDisplayArea');
+            kraDisplayArea.innerHTML = ''; // Clear previous KRAs
+
+            const uniqueKRAs = [...new Set(dataToDisplayKRAs.map(item => item['KRA']))].filter(kra => kra && kra.trim() !== '').sort();
+
+            if (uniqueKRAs.length > 0) {
+                uniqueKRAs.forEach(kra => {
+                    const div = document.createElement('div');
+                    div.className = 'kra-list-item';
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `kra-${kra.replace(/[^a-zA-Z0-9]/g, '')}`;
+                    checkbox.value = kra;
+                    checkbox.onchange = filterKpisByKraSelection; // New handler for KRA checkboxes
+
+                    // Set checked state if previously selected
+                    if (selectedKRAsToPreserve.includes(kra)) {
+                        checkbox.checked = true;
+                    }
+
+                    const label = document.createElement('label');
+                    label.htmlFor = checkbox.id;
+                    label.textContent = kra;
+                    div.appendChild(checkbox);
+                    div.appendChild(label);
+                    kraDisplayArea.appendChild(div);
+                });
+            } else {
+                kraDisplayArea.innerHTML = '<p>No KRAs found for the selected filters.</p>';
+            }
+        }
+
+        // Function to filter and display KPIs based on current KRA checkbox selections
+        function filterKpisByKraSelection() {
+            const kpiDisplayArea = document.getElementById('kpiDisplayArea').querySelector('ul');
+            kpiDisplayArea.innerHTML = ''; // Clear previous KPIs
+
+            const selectedKRACheckboxes = document.querySelectorAll('#kraDisplayArea input[type="checkbox"]:checked');
+            const selectedKRAs = Array.from(selectedKRACheckboxes).map(cb => cb.value);
+
+            let kpiFilteredData = [];
+            if (selectedKRAs.length > 0) {
+                kpiFilteredData = currentFilteredDataByTopLevel.filter(item => selectedKRAs.includes(item['KRA']));
+            } else {
+                kpiFilteredData = currentFilteredDataByTopLevel; // If no KRA selected, show all KPIs from top-level filter
+            }
+
+            // Display KPIs
+            const kpiColumns = ['KPI 1', 'KPI 2', 'KPI 3', 'KPI 4', 'KPI 5'];
+            let kpiFound = false;
+            const displayedKpis = new Set();
+
+            if (kpiFilteredData.length > 0) {
+                kpiFilteredData.forEach(item => {
+                    kpiColumns.forEach(colName => {
+                        if (item[colName] && item[colName].trim() !== '') {
+                            const kpiText = item[colName].trim();
+                            if (!displayedKpis.has(kpiText)) {
+                                const listItem = document.createElement('li');
+                                listItem.textContent = kpiText;
+                                kpiDisplayArea.appendChild(listItem);
+                                displayedKpis.add(kpiText);
+                                kpiFound = true;
+                            }
+                        }
+                    });
+                });
+            }
+
+            if (!kpiFound) {
+                kpiDisplayArea.innerHTML = '<li>No KPIs found for the selected filters.</li>';
+            }
+        }
+
+        function updateDashboard() {
+            const managementLevel = document.getElementById('managementLevel').value;
+            const department = document.getElementById('department').value;
+            const bscArea = document.getElementById('bscArea').value;
+
+            // Capture currently selected KRAs before re-populating the KRA section
+            const existingCheckboxes = document.querySelectorAll('#kraDisplayArea input[type="checkbox"]:checked');
+            const previouslySelectedKRAs = Array.from(existingCheckboxes).map(cb => cb.value);
+
+            currentFilteredDataByTopLevel = allKpiData.filter(item => {
+                const levelMatch = managementLevel === '' || item['Management_Level'] === managementLevel;
+                const deptMatch = department === '' || item['Department'] === department;
+                const bscMatch = bscArea === '' || item['BSC_Area_Focus'] === bscArea;
+                return levelMatch && deptMatch && bscMatch;
+            });
+
+            if (currentFilteredDataByTopLevel.length === 0) {
+                document.getElementById('kraDisplayArea').innerHTML = '<p>No data found for the selected filters.</p>';
+                document.getElementById('kpiDisplayArea').querySelector('ul').innerHTML = '<li>No KPIs found for the selected filters.</li>';
+                return;
+            }
+
+            // Update KRA checkboxes, preserving previously selected ones
+            updateKraCheckboxes(currentFilteredDataByTopLevel, previouslySelectedKRAs);
+
+            // Filter and display KPIs based on the (potentially preserved) KRA selections
+            filterKpisByKraSelection();
+        }
+
+        async function loadFromGoogleSheet() {
+            const shareableUrl = DEFAULT_GOOGLE_SHEET_URL;
+            const kraDisplayArea = document.getElementById('kraDisplayArea');
+            const kpiDisplayArea = document.getElementById('kpiDisplayArea').querySelector('ul');
+            hideStatus();
+
+            if (!shareableUrl || shareableUrl.trim() === '' || !shareableUrl.includes('docs.google.com/spreadsheets/d/')) {
+                showStatus('Default Google Sheet URL is invalid.', 'error');
+                kraDisplayArea.innerHTML = '<p>*Error loading data from default sheet*</p>';
+                kpiDisplayArea.innerHTML = '<li>*Error loading data from default sheet*</li>';
+                allKpiData = [];
+                return;
+            }
+
+            // Convert the shareable URL to a CSV export URL
+            let csvExportUrl = shareableUrl.replace('/edit#gid=', '/export?format=csv&gid=');
+            if (!csvExportUrl.includes('/export?format=csv')) {
+                 // Handle cases where the URL might be a shortened one or missing gid, try a generic conversion
+                 const match = shareableUrl.match(/spreadsheets\/d\/([a-zA-Z0-9_-]+)/); // Escaped backslashes for Python
+                 if (match && match[1]) {
+                     csvExportUrl = `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`;
+                     // Attempt to extract gid if available, though not always in the 'edit' part
+                     const gidMatch = shareableUrl.match(/#gid=(\d+)/); // Escaped backslashes for Python
+                     if (gidMatch && gidMatch[1]) {
+                         csvExportUrl += `&gid=${gidMatch[1]}`;
+                     }
+                 }
+                 else {
+                     showStatus('Could not parse Google Sheet URL. Please ensure it\'s a valid shareable link.', 'error');
+                     kraDisplayArea.innerHTML = '<p>*Error loading data*</p>';
+                     kpiDisplayArea.innerHTML = '<li>*Error loading data*</li>';
+                     allKpiData = [];
+                     return;
+                 }
+            }
+
+            showStatus('Fetching data from Google Sheet...', 'info');
+
+            try {
+                const response = await fetch(csvExportUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}. Please check if the sheet is publicly accessible ('Anyone with the link')`);
+                }
+                const csvData = await response.text();
+
+                allKpiData = parseCsvToObject(csvData);
+                if (allKpiData.length > 0) {
+                    showStatus('Data loaded successfully from Google Sheet. Now apply filters.', 'success');
+
+                    // IMPORTANT: Replace these with your actual CSV column names
+                    populateDropdown('managementLevel', 'Management_Level', allKpiData);
+                    populateDropdown('department', 'Department', allKpiData);
+                    populateDropdown('bscArea', 'BSC_Area_Focus', allKpiData);
+
+                    updateDashboard(); // Initial dashboard update to populate KRAs and KPIs
+                }
+                 else {
+                    showStatus('Google Sheet is empty or could not be parsed.', 'error');
+                    kraDisplayArea.innerHTML = '<p>*No data found in Google Sheet*</p>';
+                    kpiDisplayArea.innerHTML = '<li>*No data found in Google Sheet*</li>';
+                }
+            }
+            catch (error) {
+                showStatus(`Error loading data from Google Sheet: ${error.message}`, 'error');
+                kraDisplayArea.innerHTML = '<p>*Error loading data*</p>';
+                kpiDisplayArea.innerHTML = '<li>*Error loading data*</li>';
+                allKpiData = [];
+            }
+        }
+
+        function parseCsvToObject(csv) {
+            const lines = csv.split(/\r?\n/).filter(line => line.trim() !== '');
+            if (lines.length === 0) {
+                return [];
+            }
+
+            const headers = lines[0].split(',').map(header => header.trim());
+            const data = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const cells = lines[i].split(',').map(cell => cell.trim());
+                if (cells.length === headers.length) {
+                    let rowObject = {};
+                    for (let j = 0; j < headers.length; j++) {
+                        rowObject[headers[j]] = cells[j];
+                    }
+                    data.push(rowObject);
+                }
+            }
+            return data;
+        }
+
+        // Modal functions
+        function showJdForm() {
+            document.getElementById('jdModal').style.display = 'flex';
+        }
+
+        function hideJdForm() {
+            document.getElementById('jdModal').style.display = 'none';
+        }
+
+        function generateJdPdf() {
+            try {
+                console.log('generateJdPdf started.'); // For browser console debugging
+
+                const employeeName = document.getElementById('employeeName').value;
+                const employeeId = document.getElementById('employeeId').value;
+                const managementLevel = document.getElementById('managementLevel').value;
+                const department = document.getElementById('department').value;
+                const bscArea = document.getElementById('bscArea').value;
+
+                if (!employeeName || !employeeId) {
+                    alert('Please enter Employee Name and Employee ID to generate the JD.');
+                    return;
+                }
+
+                // Check if jsPDF library is loaded (using window.jsPDF, as it's often capitalized)
+                if (typeof window.jsPDF === 'undefined') {
+                    alert('Error: The main PDF generation library (jsPDF) is not loaded. This usually means a network issue or an incorrect script path. Please check your internet connection and the script tag for jspdf.umd.min.js.');
+                    console.error('jsPDF library (window.jsPDF) is undefined.');
+                    return;
+                }
+                const doc = new window.jsPDF(); // Use the global jsPDF constructor (capital J)
+
+                // Check if jspdf-autotable plugin is loaded and attached
+                if (typeof doc.autoTable !== 'function') {
+                    alert('Error: The PDF table generation plugin (jspdf-autotable) is not loaded or not properly attached to jsPDF. Ensure both jspdf and jspdf-autotable scripts are loaded correctly and in the right order.');
+                    console.error('doc.autoTable is not a function. jspdf-autotable might not be loaded or attached correctly.');
+                    return;
+                }
+
+                doc.setFontSize(18);
+                doc.text("Job Description - Avaada Electro Ltd.", 10, 20);
+                doc.setFontSize(12);
+                doc.text("MIDC Butibori, Nagpur, Maharashtra", 10, 28);
+
+                doc.setFontSize(10);
+                doc.text(`Generated On: ${new Date().toLocaleDateString()}`, 10, 36);
+
+                let yOffset = 50;
+
+                doc.setFontSize(12);
+                doc.text("Employee Details:", 10, yOffset);
+                yOffset += 7;
+                doc.setFontSize(10);
+                doc.text(`Employee Name: ${employeeName}`, 10, yOffset);
+                yOffset += 7;
+                doc.text(`Employee ID: ${employeeId}`, 10, yOffset);
+                yOffset += 7;
+
+                doc.setFontSize(12);
+                doc.text("Role & Functional Placement:", 10, yOffset);
+                yOffset += 7;
+                doc.setFontSize(10);
+                doc.text(`Management Level: ${managementLevel || 'Not Selected'}`, 10, yOffset);
+                yOffset += 7;
+                doc.text(`Department: ${department || 'Not Selected'}`, 10, yOffset);
+                yOffset += 7;
+                doc.text(`BSC Area Focus: ${bscArea || 'Not Selected'}`, 10, yOffset);
+                yOffset += 15;
+
+                doc.setFontSize(12);
+                doc.text("Performance Evaluation Framework:", 10, yOffset);
+                yOffset += 10;
+
+                // Prepare data for KRA/KPI table using the globally filtered data
+                const selectedKRACheckboxes = document.querySelectorAll('#kraDisplayArea input[type="checkbox"]:checked');
+                const selectedKRAs = Array.from(selectedKRACheckboxes).map(cb => cb.value);
+
+                let kraKpiDataForPdf = [];
+                if (selectedKRAs.length > 0) {
+                    kraKpiDataForPdf = currentFilteredDataByTopLevel.filter(item => selectedKRAs.includes(item['KRA']));
+                } else {
+                    kraKpiDataForPdf = currentFilteredDataByTopLevel; // If no KRAs selected, use all top-level filtered data
+                }
+
+                const kpiColumns = ['KPI 1', 'KPI 2', 'KPI 3', 'KPI 4', 'KPI 5'];
+                const kraKpiMap = new Map(); // Map KRA to a set of KPIs
+
+                kraKpiDataForPdf.forEach(item => {
+                    const kra = item['KRA'];
+                    if (kra && kra.trim() !== '') {
+                        if (!kraKpiMap.has(kra)) {
+                            kraKpiMap.set(kra, new Set());
+                        }
+                        kpiColumns.forEach(colName => {
+                            if (item[colName] && item[colName].trim() !== '') {
+                                kraKpiMap.get(kra).add(item[colName].trim());
+                            }
+                        });
+                    }
+                });
+
+                let dataToDisplay = [];
+                kraKpiMap.forEach((kpis, kra) => {
+                    if (kpis.size > 0) {
+                        kpis.forEach(kpi => {
+                            dataToDisplay.push([kra, kpi]);
+                        });
+                    } else { // If a KRA exists but has no KPIs after filtering, or no KPIs are defined
+                        dataToDisplay.push([kra, 'No KPIs defined']);
+                    }
+                });
+
+                if (dataToDisplay.length === 0 && kraKpiDataForPdf.length === 0) {
+                     dataToDisplay.push(['N/A', 'No KRAs/KPIs found for current selection']);
+                }
+
+                doc.autoTable({
+                    startY: yOffset,
+                    head: [['Key Result Area (KRA)', 'Key Performance Indicator (KPI)']],
+                    body: dataToDisplay,
+                    theme: 'striped',
+                    headStyles: { fillColor: [20, 20, 100] },
+                    styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak' },
+                    columnStyles: { 0: { cellWidth: 'auto' }, 1: { cellWidth: 'auto' } }
+                });
+
+                doc.save(`JD_${employeeName.replace(/ /g, '_')}_${employeeId}.pdf`);
+                console.log('PDF generation attempted successfully.'); // For browser console debugging
+                hideJdForm();
+                document.getElementById('employeeName').value = '';
+                document.getElementById('employeeId').value = '';
+            } catch (error) {
+                console.error('Error generating PDF:', error); // For browser console debugging
+                alert(`An error occurred during PDF generation: ${error.message}. Please check the console for more details.`);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadFromGoogleSheet);
+    </script>
+
+</body>
+</html>
