@@ -6,11 +6,10 @@
     <title>KPI Dashboard from Google Sheet</title>
     <!-- Embedded jsPDF and jspdf-autotable content -->
     <script>
-        // jspdf.umd.min.js content
+        // jsPDF and jspdf-autotable are no longer strictly needed for text display, but keeping the includes just in case for other functionality or future changes.
         ${JSPDF_CONTENT}
     </script>
     <script>
-        // jspdf-autotable.min.js content
         ${JSPDF_AUTOTABLE_CONTENT}
     </script>
     <style>
@@ -33,12 +32,13 @@
 
         /* Modal styles */
         .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); justify-content: center; align-items: center; }
-        .modal-content { background-color: #fefefe; margin: auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; position: relative; }
+        .modal-content { background-color: #fefefe; margin: auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; position: relative; }
         .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
         .close-button:hover, .close-button:focus { color: black; text-decoration: none; cursor: pointer; }
         .modal-content label { display: block; margin-bottom: 5px; font-weight: bold; }
         .modal-content input[type="text"] { width: calc(100% - 22px); padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; }
         .modal-footer { text-align: right; margin-top: 20px; }
+        #jdOutput { white-space: pre-wrap; font-family: monospace; border: 1px solid #ccc; padding: 10px; margin-top: 15px; background-color: #f9f9f9; max-height: 400px; overflow-y: auto; }
     </style>
 </head>
 <body>
@@ -89,21 +89,31 @@
         </div>
 
         <div style="text-align: center; margin-top: 20px;">
-            <button onclick="showJdForm()">Download Job Description (JD)</button>
+            <button onclick="showJdForm()">Generate Job Description (JD)</button>
         </div>
     </div>
 
-    <!-- JD Download Modal -->
+    <!-- JD Display Modal -->
     <div id="jdModal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="hideJdForm()">&times;</span>
             <h2>Generate Job Description (JD)</h2>
-            <label for="employeeName">Employee Name:</label>
-            <input type="text" id="employeeName" placeholder="Enter Employee Name">
-            <label for="employeeId">Employee ID:</label>
-            <input type="text" id="employeeId" placeholder="Enter Employee ID">
-            <div class="modal-footer">
-                <button onclick="generateJdPdf()">Download JD as PDF</button>
+            <div id="jdInputSection">
+                <label for="employeeName">Employee Name:</label>
+                <input type="text" id="employeeName" placeholder="Enter Employee Name">
+                <label for="employeeId">Employee ID:</label>
+                <input type="text" id="employeeId" placeholder="Enter Employee ID">
+                <div class="modal-footer">
+                    <button onclick="displayJdText()">Generate JD</button>
+                </div>
+            </div>
+            <div id="jdDisplaySection" style="display:none;">
+                <h3>Generated Job Description</h3>
+                <pre id="jdOutput"></pre>
+                <div class="modal-footer">
+                    <button onclick="copyJdToClipboard()">Copy to Clipboard</button>
+                    <button onclick="resetJdForm()">Back to Input</button>
+                </div>
             </div>
         </div>
     </div>
@@ -111,6 +121,7 @@
     <script>
         let allKpiData = []; // Store the parsed data globally
         let currentFilteredDataByTopLevel = []; // Global to store data filtered by top-level dropdowns
+        let currentJdText = ''; // To store the generated JD text for copying
         const ENCODED_GOOGLE_SHEET_URL = 'aHR0cHM6Ly9kb2NzLmdvb2dsZS5jb20vc3ByZWFkc2hlZXRzL2QvMWhRWDFOTVNfZGhNQlg4OGtwMG93MG50WEwxU2h4LUh4aWU1N2JSX195aGMvZWRpdD91c3A9c2hhcmluZw==';
         const DEFAULT_GOOGLE_SHEET_URL = atob(ENCODED_GOOGLE_SHEET_URL); // Decode in JavaScript
 
@@ -267,11 +278,11 @@
             let csvExportUrl = shareableUrl.replace('/edit#gid=', '/export?format=csv&gid=');
             if (!csvExportUrl.includes('/export?format=csv')) {
                  // Handle cases where the URL might be a shortened one or missing gid, try a generic conversion
-                 const match = shareableUrl.match(/spreadsheets\/d\/([a-zA-Z0-9_-]+)/); // Escaped backslashes for Python
+                 const match = shareableUrl.match(/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
                  if (match && match[1]) {
                      csvExportUrl = `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`;
                      // Attempt to extract gid if available, though not always in the 'edit' part
-                     const gidMatch = shareableUrl.match(/#gid=(\d+)/); // Escaped backslashes for Python
+                     const gidMatch = shareableUrl.match(/#gid=(\d+)/);
                      if (gidMatch && gidMatch[1]) {
                          csvExportUrl += `&gid=${gidMatch[1]}`;
                      }
@@ -343,6 +354,8 @@
 
         // Modal functions
         function showJdForm() {
+            document.getElementById('jdInputSection').style.display = 'block';
+            document.getElementById('jdDisplaySection').style.display = 'none';
             document.getElementById('jdModal').style.display = 'flex';
         }
 
@@ -350,131 +363,93 @@
             document.getElementById('jdModal').style.display = 'none';
         }
 
-        function generateJdPdf() {
-            try {
-                console.log('generateJdPdf started.'); // For browser console debugging
+        function resetJdForm() {
+            document.getElementById('jdInputSection').style.display = 'block';
+            document.getElementById('jdDisplaySection').style.display = 'none';
+            document.getElementById('jdOutput').textContent = '';
+            currentJdText = '';
+        }
 
-                const employeeName = document.getElementById('employeeName').value;
-                const employeeId = document.getElementById('employeeId').value;
-                const managementLevel = document.getElementById('managementLevel').value;
-                const department = document.getElementById('department').value;
-                const bscArea = document.getElementById('bscArea').value;
+        function displayJdText() {
+            const employeeName = document.getElementById('employeeName').value;
+            const employeeId = document.getElementById('employeeId').value;
+            const managementLevel = document.getElementById('managementLevel').value;
+            const department = document.getElementById('department').value;
+            const bscArea = document.getElementById('bscArea').value;
 
-                if (!employeeName || !employeeId) {
-                    alert('Please enter Employee Name and Employee ID to generate the JD.');
-                    return;
-                }
+            if (!employeeName || !employeeId) {
+                alert('Please enter Employee Name and Employee ID to generate the JD.');
+                return;
+            }
 
-                // Check if jsPDF library is loaded (using window.jsPDF, as it's often capitalized)
-                if (typeof window.jsPDF === 'undefined') {
-                    alert('Error: The main PDF generation library (jsPDF) is not loaded. This usually means a network issue or an incorrect script path. Please check your internet connection and the script tag for jspdf.umd.min.js.');
-                    console.error('jsPDF library (window.jsPDF) is undefined.');
-                    return;
-                }
-                const doc = new window.jsPDF(); // Use the global jsPDF constructor (capital J)
+            let jdContent = `Job Description - Avaada Electro Ltd.\n`;
+            jdContent += `MIDC Butibori, Nagpur, Maharashtra\n\n`;
+            jdContent += `Generated On: ${new Date().toLocaleDateString()}\n\n`;
+            jdContent += `Employee Details:\n`;
+            jdContent += `  Employee Name: ${employeeName}\n`;
+            jdContent += `  Employee ID: ${employeeId}\n\n`;
+            jdContent += `Role & Functional Placement:\n`;
+            jdContent += `  Management Level: ${managementLevel || 'Not Selected'}\n`;
+            jdContent += `  Department: ${department || 'Not Selected'}\n`;
+            jdContent += `  BSC Area Focus: ${bscArea || 'Not Selected'}\n\n`;
+            jdContent += `Performance Evaluation Framework:\n`;
 
-                // Check if jspdf-autotable plugin is loaded and attached
-                if (typeof doc.autoTable !== 'function') {
-                    alert('Error: The PDF table generation plugin (jspdf-autotable) is not loaded or not properly attached to jsPDF. Ensure both jspdf and jspdf-autotable scripts are loaded correctly and in the right order.');
-                    console.error('doc.autoTable is not a function. jspdf-autotable might not be loaded or attached correctly.');
-                    return;
-                }
+            const selectedKRACheckboxes = document.querySelectorAll('#kraDisplayArea input[type="checkbox"]:checked');
+            const selectedKRAs = Array.from(selectedKRACheckboxes).map(cb => cb.value);
 
-                doc.setFontSize(18);
-                doc.text("Job Description - Avaada Electro Ltd.", 10, 20);
-                doc.setFontSize(12);
-                doc.text("MIDC Butibori, Nagpur, Maharashtra", 10, 28);
+            let kraKpiDataForDisplay = [];
+            if (selectedKRAs.length > 0) {
+                kraKpiDataForDisplay = currentFilteredDataByTopLevel.filter(item => selectedKRAs.includes(item['KRA']));
+            } else {
+                kraKpiDataForDisplay = currentFilteredDataByTopLevel;
+            }
 
-                doc.setFontSize(10);
-                doc.text(`Generated On: ${new Date().toLocaleDateString()}`, 10, 36);
+            const kpiColumns = ['KPI 1', 'KPI 2', 'KPI 3', 'KPI 4', 'KPI 5'];
+            const kraKpiMap = new Map();
 
-                let yOffset = 50;
-
-                doc.setFontSize(12);
-                doc.text("Employee Details:", 10, yOffset);
-                yOffset += 7;
-                doc.setFontSize(10);
-                doc.text(`Employee Name: ${employeeName}`, 10, yOffset);
-                yOffset += 7;
-                doc.text(`Employee ID: ${employeeId}`, 10, yOffset);
-                yOffset += 7;
-
-                doc.setFontSize(12);
-                doc.text("Role & Functional Placement:", 10, yOffset);
-                yOffset += 7;
-                doc.setFontSize(10);
-                doc.text(`Management Level: ${managementLevel || 'Not Selected'}`, 10, yOffset);
-                yOffset += 7;
-                doc.text(`Department: ${department || 'Not Selected'}`, 10, yOffset);
-                yOffset += 7;
-                doc.text(`BSC Area Focus: ${bscArea || 'Not Selected'}`, 10, yOffset);
-                yOffset += 15;
-
-                doc.setFontSize(12);
-                doc.text("Performance Evaluation Framework:", 10, yOffset);
-                yOffset += 10;
-
-                // Prepare data for KRA/KPI table using the globally filtered data
-                const selectedKRACheckboxes = document.querySelectorAll('#kraDisplayArea input[type="checkbox"]:checked');
-                const selectedKRAs = Array.from(selectedKRACheckboxes).map(cb => cb.value);
-
-                let kraKpiDataForPdf = [];
-                if (selectedKRAs.length > 0) {
-                    kraKpiDataForPdf = currentFilteredDataByTopLevel.filter(item => selectedKRAs.includes(item['KRA']));
-                } else {
-                    kraKpiDataForPdf = currentFilteredDataByTopLevel; // If no KRAs selected, use all top-level filtered data
-                }
-
-                const kpiColumns = ['KPI 1', 'KPI 2', 'KPI 3', 'KPI 4', 'KPI 5'];
-                const kraKpiMap = new Map(); // Map KRA to a set of KPIs
-
-                kraKpiDataForPdf.forEach(item => {
-                    const kra = item['KRA'];
-                    if (kra && kra.trim() !== '') {
-                        if (!kraKpiMap.has(kra)) {
-                            kraKpiMap.set(kra, new Set());
-                        }
-                        kpiColumns.forEach(colName => {
-                            if (item[colName] && item[colName].trim() !== '') {
-                                kraKpiMap.get(kra).add(item[colName].trim());
-                            }
-                        });
+            kraKpiDataForDisplay.forEach(item => {
+                const kra = item['KRA'];
+                if (kra && kra.trim() !== '') {
+                    if (!kraKpiMap.has(kra)) {
+                        kraKpiMap.set(kra, new Set());
                     }
-                });
+                    kpiColumns.forEach(colName => {
+                        if (item[colName] && item[colName].trim() !== '') {
+                            kraKpiMap.get(kra).add(item[colName].trim());
+                        }
+                    });
+                }
+            });
 
-                let dataToDisplay = [];
+            if (kraKpiMap.size > 0) {
                 kraKpiMap.forEach((kpis, kra) => {
+                    jdContent += `  KRA: ${kra}\n`;
                     if (kpis.size > 0) {
                         kpis.forEach(kpi => {
-                            dataToDisplay.push([kra, kpi]);
+                            jdContent += `    - KPI: ${kpi}\n`;
                         });
-                    } else { // If a KRA exists but has no KPIs after filtering, or no KPIs are defined
-                        dataToDisplay.push([kra, 'No KPIs defined']);
+                    } else {
+                        jdContent += `    - No KPIs defined for this KRA.\n`;
                     }
                 });
+            } else {
+                jdContent += `  No KRAs/KPIs found for the current selection.\n`;
+            }
 
-                if (dataToDisplay.length === 0 && kraKpiDataForPdf.length === 0) {
-                     dataToDisplay.push(['N/A', 'No KRAs/KPIs found for current selection']);
-                }
+            currentJdText = jdContent;
+            document.getElementById('jdOutput').textContent = jdContent;
+            document.getElementById('jdInputSection').style.display = 'none';
+            document.getElementById('jdDisplaySection').style.display = 'block';
+        }
 
-                doc.autoTable({
-                    startY: yOffset,
-                    head: [['Key Result Area (KRA)', 'Key Performance Indicator (KPI)']],
-                    body: dataToDisplay,
-                    theme: 'striped',
-                    headStyles: { fillColor: [20, 20, 100] },
-                    styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak' },
-                    columnStyles: { 0: { cellWidth: 'auto' }, 1: { cellWidth: 'auto' } }
+        function copyJdToClipboard() {
+            if (currentJdText) {
+                navigator.clipboard.writeText(currentJdText).then(function() {
+                    alert('Job Description copied to clipboard!');
+                }).catch(function(err) {
+                    console.error('Failed to copy text: ', err);
+                    alert('Failed to copy Job Description to clipboard. Please try again or copy manually.');
                 });
-
-                doc.save(`JD_${employeeName.replace(/ /g, '_')}_${employeeId}.pdf`);
-                console.log('PDF generation attempted successfully.'); // For browser console debugging
-                hideJdForm();
-                document.getElementById('employeeName').value = '';
-                document.getElementById('employeeId').value = '';
-            } catch (error) {
-                console.error('Error generating PDF:', error); // For browser console debugging
-                alert(`An error occurred during PDF generation: ${error.message}. Please check the console for more details.`);
             }
         }
 
