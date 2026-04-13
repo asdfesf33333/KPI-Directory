@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPI Dashboard from Google Sheet</title>
+    <!-- Embedded jsPDF and jspdf-autotable content -->
+    <script>
+        // jspdf.umd.min.js content
+        /** @license
+ *
+ * jsPDF - PDF Document creation from JavaScript
+ * Version 2.5.1 Built on 2022-01-28T15:37:57.789Z
+ *                      CommitID 00000000
+ *
+ * Copyright (c) 2010-2021 James Hall <james@parall.ax>, https://github.com/MrRio/jsPDF
+ *               2015-2021 yWorks GmbH, http://www.yworks.com
+ *               2015-2021 Lukas Holländer <lukas.hollaender@yworks.com>, https://github.com/HackbrettXXX
+ *               2016-2018 Aras Abbasi <aras.abbasi@gmail.com>
+ *
+ * Licensed under the MIT License.
+ * http://opensource.org/licenses/mit-license
+ */
+
+var jsPDF = (function (global) {
+    "use strict";
+    var _this = this;
+    var jspdf = {
+        version: "2.5.1",
+        API: {},
+        // sources
+        'silly': 1
+    };
+    var core = jspdf.API;
+    core.events = [];
+    core.addEvent = function (name, fn) {
+        if (typeof core.events[name] === 'undefined') {
+            core.events[name] = [];
+        }
+        core.events[name].push(fn);
+    };
+    core.removeEvent = function (name, fn) {
+        if (typeof core.events[name] !== 'undefined') {
+            core.events[name] = core.events[name].filter(function (f) { return f !== fn; });
+        }
+    };
+    core.publish = function (name, args) {
+        if (typeof core.events[name] === 'undefined') {
+            return;
+        }
+        core.events[name].forEach(function (fn) {
+            try {
+                fn.apply(core, args);
+            } catch (error) {
+                console.error("Error in jsPDF event handler for \"" + name + "\":", error);
+            }
+        });
+    };
+    core.setOptions = function (options) {
+        this.options = Object.assign({}, this.options, options);
+    };
+    core.options = {};
+    core.setOptions({ font: "helvetica" });
+    var get = function (property) {
+        return this.options[property];
+    };
+    var set = function (property, value) {
+        this.options[property] = value;
+    };
+    var publish = function (name, args) {
+        return core.publish(name, args);
+    };
+    var addEvent = function (name, fn) {
+        return core.addEvent(name, fn);
+    };
+    var removeEvent = function (name, fn) {
+        return core.removeEvent(name, fn);
+    };
+    var setOptions = function (options) {
+        return core.setOptions(options);
+    };
+    var getOptions = function () {
+        return core.options;
+    };
+    var resetOptions = function () {
+        core.options = {};
+        core.setOptions({ font: "helvetica" });
+    };
+    var _initialized = false;
+    var jsPDF = /** @class */ (function () {
+        function jsPDF(options) {
+            var _newOptions = {};
+            if (typeof options === 'object') {
+                _newOptions = options;
+            } else if (typeof options === 'string') {
+                _newOptions.orientation = options;
+            }
+            options = Object.assign({}, core.options, _newOptions);
+            this.internal = {
+                'data': [],
+                'pageSize': {
+                    'width': options.width || 0,
+                    'height': options.height || 0
+                },
+                'output': function () { return _this.output.apply(_this, arguments); },
+                'get:font': function (font) { return get.call(_this, font); },
+                'set:font': function (font, value) { return set.call(_this, font, value); },
+                'getOptions': getOptions,
+                'setOptions': setOptions,
+                'publish': publish,
+                'addEvent': addEvent,
+                'removeEvent': removeEvent,
+                'resetOptions': resetOptions
+            };
+            core.publish('initialized', this);
+            if (_initialized === false) {
+                core.publish('postInitialize', this);
+                _initialized = true;
+            }
+            return this;
+        }
+        jsPDF.API = core;
+        return jsPDF;
+    }());
+    if (typeof global['jsPDF'] === 'undefined') {
+        global['jsPDF'] = jspdf.jsPDF = jsPDF;
+    } else {
+        global['jsPDF'] = jspdf.jsPDF = Object.assign(global['jsPDF'], jsPDF);
+    }
+    return jspdf.jsPDF;
+}((typeof self !== 'undefined' && self || typeof window !== 'undefined' && window || typeof global !== 'undefined' && global || typeof this !== 'undefined' && this)));
+
+if (typeof module === 'object' && typeof exports === 'object') {
+    module.exports = jsPDF;
+}
+
+/*
+
+[... rest of the jsPDF.umd.min.js content ...]
+
+This is a truncated example. The actual content of JSPDF_CONTENT will be the full JavaScript code from the jsPDF library.
+*/
+
+
+        // The actual JSPDF_CONTENT will be inserted here by the Python script
+        
