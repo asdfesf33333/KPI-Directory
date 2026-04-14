@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KPI Dashboard</title>
+    <title>KRA / KPI Directory</title>
     <!-- Keep previous script injections if any -->
     <script>
         ${ JSPDF_CONTENT }
@@ -13,17 +13,28 @@
     </script>
     <style>
         :root {
-            --bg-color: #0b0c10;
-            --text-color: #f4f5f6;
-            --card-bg: #6209f1;
-            --card-border: #020269;
-            --accent-color: #1e0583;
-            --accent-hover: #240184;
+            --bg-color: #000000;
+            --text-color: #c5c6c7;
+            --card-bg: #000000;
+            --card-border: #8a2be2;
+            --accent-color: #b026ff;
+            --accent-hover: #8a2be2;
             --error-color: #ff007f;
             --success-color: #39ff14;
             --neon-shadow: 0 0 10px var(--accent-color), 0 0 20px var(--accent-color);
             --input-bg: #0b0c10;
             --font-family: system-ui, -apple-system, blinkmacsystemfont, 'Segoe UI', roboto, oxygen, ubuntu, cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        body.light-theme {
+            --bg-color: #f0f2f5;
+            --text-color: #333333;
+            --card-bg: #ffffff;
+            --card-border: #b026ff;
+            --accent-color: #8a2be2;
+            --accent-hover: #691ea0;
+            --input-bg: #ffffff;
+            --neon-shadow: 0 4px 15px rgba(138, 43, 226, 0.25);
         }
 
         body {
@@ -33,6 +44,7 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .container {
@@ -43,10 +55,33 @@
             border-radius: 12px;
             box-shadow: var(--neon-shadow);
             border: 1px solid var(--accent-color);
+            position: relative;
         }
 
-        h1, h2, h3, h4 { color: #fff; margin-top: 0; }
-        h1 { text-align: center; margin-bottom: 30px; letter-spacing: 2px; font-weight: 600; text-shadow: 0 0 8px var(--accent-color);}
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ffffff;
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .theme-toggle:hover {
+            background: var(--accent-color);
+            color: #ffffff;
+        }
+
+        h1, h2, h3, h4 { color: var(--text-color); margin-top: 0; }
+        body:not(.light-theme) h1, body:not(.light-theme) h2, body:not(.light-theme) h3, body:not(.light-theme) h4 { color: #fff; }
+        
+        h1 { text-align: center; margin-bottom: 30px; letter-spacing: 2px; font-weight: 600; }
+        body:not(.light-theme) h1 { text-shadow: 0 0 8px var(--accent-color); }
+        body.light-theme h1 { color: var(--accent-hover); }
 
         .filters {
             display: flex;
@@ -59,6 +94,7 @@
             background: rgba(11, 12, 16, 0.5);
             margin-bottom: 30px;
         }
+        body.light-theme .filters { background: #f9f9f9; }
 
         .filter-group { flex: 1; min-width: 250px; max-width: 400px; }
         .filter-group label {
@@ -69,8 +105,8 @@
             font-size: 0.9em;
             text-transform: uppercase;
             letter-spacing: 1px;
-            text-shadow: 0 0 4px var(--accent-color);
         }
+        body:not(.light-theme) .filter-group label { text-shadow: 0 0 4px var(--accent-color); }
 
         select, input[type="text"] {
             width: 100%;
@@ -78,11 +114,14 @@
             border: 1px solid var(--card-border);
             border-radius: 6px;
             background-color: var(--input-bg);
-            color: #fff;
+            color: var(--text-color);
             font-size: 1em;
             outline: none;
             transition: all 0.3s;
             box-sizing: border-box;
+        }
+        body:not(.light-theme) select, body:not(.light-theme) input[type="text"] {
+            color: #fff;
             box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
         }
         
@@ -91,7 +130,7 @@
             box-shadow: 0 0 10px var(--accent-color);
         }
 
-        button {
+        button.primary-btn, .cancel-btn {
             padding: 12px 24px;
             background-color: transparent;
             color: var(--accent-color);
@@ -103,18 +142,22 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             transition: 0.3s;
+        }
+        body:not(.light-theme) button.primary-btn, body:not(.light-theme) .cancel-btn {
             box-shadow: 0 0 5px var(--accent-color) inset, 0 0 5px var(--accent-color);
         }
 
-        button:hover {
+        button.primary-btn:hover, .cancel-btn:hover {
             background-color: var(--accent-color);
-            color: #0b0c10;
-            box-shadow: 0 0 15px var(--accent-color) inset, 0 0 15px var(--accent-color);
+            color: var(--bg-color);
             transform: translateY(-2px);
         }
+        body:not(.light-theme) button.primary-btn:hover, body:not(.light-theme) .cancel-btn:hover {
+            box-shadow: 0 0 15px var(--accent-color) inset, 0 0 15px var(--accent-color);
+        }
         
-        button:active { transform: translateY(0); }
-        button:disabled { border-color: #555; color: #555; cursor: not-allowed; box-shadow: none; transform: none;}
+        button.primary-btn:active, .cancel-btn:active { transform: translateY(0); }
+        button.primary-btn:disabled, .cancel-btn:disabled { border-color: #555; color: #555; cursor: not-allowed; box-shadow: none; transform: none;}
 
         /* --- Tree / Accordion Styling --- */
         .hierarchy-container { margin-top: 20px; }
@@ -125,12 +168,13 @@
             margin-bottom: 15px;
             background: rgba(11, 12, 16, 0.7);
             overflow: hidden;
-            box-shadow: 0 0 8px rgba(30, 5, 131, 0.2);
+            box-shadow: 0 0 8px rgba(176, 38, 255, 0.2);
         }
+        body.light-theme .bsc-section { background: #fff; box-shadow: var(--neon-shadow); }
 
         .accordion-header {
             padding: 16px 20px;
-            background: #6209f1;
+            background: var(--card-bg);
             cursor: pointer;
             user-select: none;
             display: flex;
@@ -140,23 +184,25 @@
             margin: 0;
             font-size: 1.1em;
             border-bottom: 1px solid transparent;
+            color: var(--text-color);
         }
 
-        .accordion-header:hover { background: #2b3947; }
+        .accordion-header:hover { opacity: 0.9; }
         .accordion-header::after {
             content: '▼';
             font-size: 0.8em;
             transition: transform 0.3s;
             color: var(--accent-color);
-            text-shadow: 0 0 5px var(--accent-color);
         }
+        body:not(.light-theme) .accordion-header::after { text-shadow: 0 0 5px var(--accent-color); }
+        
         .accordion-header.active { border-bottom: 1px solid var(--card-border); }
-        .accordion-header.active::after { transform: rotate(180deg); color: #fff;}
+        .accordion-header.active::after { transform: rotate(180deg); }
 
         .accordion-content {
             display: none;
             padding: 15px 20px;
-            background: var(--card-bg);
+            background: var(--bg-color);
         }
         .accordion-header.active + .accordion-content { display: block; }
 
@@ -169,17 +215,19 @@
 
         .kra-header {
             padding: 12px 15px;
-            background: #0b0c10;
+            background: rgba(0,0,0,0.5);
             font-size: 1em;
             border: none;
             font-weight: 500;
         }
+        body.light-theme .kra-header { background: #f4f5f7; }
 
         .kra-content {
             padding: 10px 15px;
             background: rgba(0,0,0,0.3);
             display: none;
         }
+        body.light-theme .kra-content { background: #fafafa; }
         .kra-header.active + .kra-content { display: block; }
 
         .kpi-label {
@@ -187,15 +235,17 @@
             align-items: flex-start;
             margin-bottom: 10px;
             padding: 10px;
-            background: #6209f1;
+            background: var(--card-bg);
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
             border: 1px solid var(--card-border);
+            color: var(--text-color);
         }
         
-        .kpi-label:hover { border-color: var(--accent-color); box-shadow: 0 0 8px rgba(30, 5, 131, 0.4);}
-        
+        .kpi-label:hover { border-color: var(--accent-color); box-shadow: 0 0 8px rgba(176, 38, 255, 0.4);}
+        body.light-theme .kpi-label:hover { box-shadow: 0 0 6px rgba(138, 43, 226, 0.3); }
+
         .kpi-label input[type="checkbox"] {
             margin-top: 4px;
             margin-right: 15px;
@@ -206,7 +256,7 @@
         }
 
         /* Validation UI */
-        .kra-validation {
+        .kra-validation, .bsc-validation {
             font-size: 0.85em;
             margin-left: 15px;
             padding: 3px 8px;
@@ -214,13 +264,13 @@
             display: inline-block;
             font-weight: 600;
         }
-        .kra-validation.error { 
+        .kra-validation.error, .bsc-validation.error { 
             color: #fff; background-color: var(--error-color); 
             box-shadow: 0 0 10px var(--error-color); border: 1px solid #fff;
         }
-        .kra-validation.success { 
+        .kra-validation.success, .bsc-validation.success { 
             color: #000; background-color: var(--success-color); 
-            box-shadow: 0 0 10px var(--success-color);
+            box-shadow: 0 0 10px var(--success-color); border: none;
         }
 
         /* Status messages */
@@ -234,7 +284,7 @@
         }
         .status-success { background-color: rgba(57, 255, 20, 0.1); color: var(--success-color); border: 1px solid var(--success-color); box-shadow: 0 0 10px var(--success-color);}
         .status-error { background-color: rgba(255, 0, 127, 0.1); color: var(--error-color); border: 1px solid var(--error-color); box-shadow: 0 0 10px var(--error-color);}
-        .status-info { background-color: rgba(30, 5, 131, 0.1); color: var(--accent-color); border: 1px solid var(--accent-color); box-shadow: 0 0 10px var(--accent-color);}
+        .status-info { background-color: rgba(176, 38, 255, 0.1); color: var(--accent-color); border: 1px solid var(--accent-color); box-shadow: 0 0 10px var(--accent-color);}
 
         /* Modal styling */
         .modal {
@@ -244,6 +294,8 @@
             backdrop-filter: blur(4px);
             justify-content: center; align-items: center;
         }
+        body.light-theme .modal { background-color: rgba(255, 255, 255, 0.8); }
+
         .modal-content {
             background-color: var(--card-bg);
             padding: 35px;
@@ -259,17 +311,17 @@
             font-size: 28px; font-weight: bold; cursor: pointer;
             transition: color 0.2s;
         }
-        .close-button:hover { color: var(--error-color); text-shadow: 0 0 10px var(--error-color); }
+        .close-button:hover { color: var(--error-color); }
+        body:not(.light-theme) .close-button:hover { text-shadow: 0 0 10px var(--error-color); }
 
         .modal-footer { margin-top: 30px; text-align: right; display: flex; gap: 12px; justify-content: flex-end;}
         
         #jdOutput {
             white-space: pre-wrap;
             font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-            background-color: #0a0a0a;
+            background-color: var(--input-bg);
             border: 1px solid var(--success-color);
             color: var(--success-color);
-            text-shadow: 0 0 2px var(--success-color);
             padding: 20px;
             border-radius: 8px;
             max-height: 400px;
@@ -277,34 +329,34 @@
             margin-top: 15px;
             font-size: 0.9em;
             line-height: 1.5;
-            box-shadow: inset 0 0 10px rgba(57, 255, 20, 0.2);
+        }
+        body:not(.light-theme) #jdOutput { 
+            text-shadow: 0 0 2px var(--success-color);
+            box-shadow: inset 0 0 10px rgba(57, 255, 20, 0.2); 
+            background-color: #0a0a0a;
         }
 
         .script-info {
-            background: rgba(30, 5, 131, 0.1);
+            background: rgba(176, 38, 255, 0.1);
             padding: 15px; 
             border-left: 4px solid var(--accent-color);
             margin-bottom: 25px; 
             font-size: 0.9em; 
             border-radius: 0 6px 6px 0;
-            color: #fff;
-            box-shadow: inset 0 0 10px rgba(30, 5, 131, 0.2);
+            color: var(--text-color);
         }
-        .script-info code {
-            background: #000; padding: 2px 6px; border-radius: 4px; color: var(--accent-color); border: 1px solid var(--accent-color);
-        }
+        body:not(.light-theme) .script-info { box-shadow: inset 0 0 10px rgba(176, 38, 255, 0.2); }
 
         .center-btn { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--card-border); }
-        
-        .main-title { color: var(--accent-color); text-shadow: 0 0 10px var(--accent-color); }
-        
-        .no-data { text-align: center; color: var(--accent-color); font-style: italic; padding: 40px; text-shadow: 0 0 5px var(--accent-color); }
+        .no-data { text-align: center; color: var(--accent-color); font-style: italic; padding: 40px; }
+        body:not(.light-theme) .no-data { text-shadow: 0 0 5px var(--accent-color); }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>KPI Dashboard <span class="main-title">CYBER</span></h1>
+        <button class="theme-toggle" onclick="toggleTheme()">Toggle Light/Dark</button>
+        <h1>KRA / KPI Directory</h1>
 
         <div id="statusMessage" class="status-message status-info"></div>
 
@@ -325,15 +377,15 @@
         </div>
 
         <div class="hierarchy-section">
-            <h2 style="color: var(--accent-color); text-shadow: 0 0 5px var(--accent-color);">Select Key Performance Indicators</h2>
-            <p style="color: #aaa; font-size: 0.9em;">Missing Selections? To proceed, every KRA column present below must have at least 3 KPIs checked.</p>
+            <h2 style="color: var(--accent-color);">Select Key Performance Indicators (KPI)</h2>
+            <p style="color: #888; font-size: 0.9em;">Rule: You must select EVERY BSC Area by choosing at least 1 KRA in each. For any selected KRA, at least 2 KPIs must be checked.</p>
             <div id="hierarchyContainer" class="hierarchy-container">
                 <div class="no-data">System Initializing Data...</div>
             </div>
         </div>
 
         <div class="center-btn">
-            <button id="generateBtn" onclick="showJdForm()">Initialize Job Description Setup</button>
+            <button id="generateBtn" class="primary-btn" onclick="showJdForm()">Generate</button>
         </div>
     </div>
 
@@ -343,44 +395,42 @@
             <span class="close-button" onclick="hideJdForm()">&times;</span>
             
             <div id="jdInputSection">
-                <h2 style="margin-bottom: 20px; color: var(--accent-color); text-shadow: 0 0 5px var(--accent-color);">Employee Identity Gateway</h2>
+                <h2 style="margin-bottom: 20px; color: var(--accent-color);">Employee Details</h2>
                 
-                <div class="script-info">
-                    <strong>CRITICAL NOTICE:</strong> Submitting this form attempts to record the copy event to the "Login Data" sheet. <br><br>
-                    <em>Webhook is linked!</em> The system is now actively pointing to your secure Google Sheet script endpoint.
-                </div>
+
 
                 <div style="margin-bottom: 15px;">
                     <label for="employeeName" style="display:block; margin-bottom: 5px; color: var(--accent-color);">Employee Name</label>
-                    <input type="text" id="employeeName" placeholder="Enter Full Identity Name">
+                    <input type="text" id="employeeName" placeholder="Enter Full Name">
                 </div>
                 
                 <div style="margin-bottom: 25px;">
                     <label for="employeeId" style="display:block; margin-bottom: 5px; color: var(--accent-color);">Employee ID</label>
-                    <input type="text" id="employeeId" placeholder="Enter Identity Hash / ID">
+                    <input type="text" id="employeeId" placeholder="Enter Employee ID">
                 </div>
                 
                 <div class="modal-footer">
-                    <button onclick="hideJdForm()" class="cancel-btn">Abort</button>
-                    <button id="btnGenerateReport" onclick="displayJdText()">Generate Report System</button>
+                    <button onclick="hideJdForm()" class="cancel-btn">Cancel</button>
+                    <button id="btnGenerateReport" class="primary-btn" onclick="displayJdText()">Generate Report</button>
                 </div>
             </div>
             
             <div id="jdDisplaySection" style="display:none;">
-                <h2 style="color: var(--success-color); text-shadow: 0 0 5px var(--success-color);">Generated Output</h2>
+                <h2 style="color: var(--success-color);">Generated Output</h2>
                 <pre id="jdOutput"></pre>
                 
                 <div class="modal-footer">
                     <button onclick="resetJdForm()" class="cancel-btn">Back</button>
-                    <button id="btnCopyData" onclick="copyJdToClipboard()">Copy & Transmit to Mainframe (Sheet)</button>
+                    <button id="btnCopyData" class="primary-btn" onclick="copyJdToClipboard()">Copy & Transmit to Sheet</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // CONFIGURATION: Connected to user's specified Web App URL
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwvfJ2qaLmRBDiIc7wJ5L_h413gpTwNfR23mjs1M55JVjjVxch-PbWPv4OiZ-wAMFi_/exec'; 
+        // CONFIGURATION: Base64 Encoded Web App URL
+        const ENCODED_WEB_APP_URL = 'aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J3dmZKMnFhTG1SQkRpSWM3d0o1TF9oNDEzZ3BUd05mUjIzbWpzMU01NUpWampWeGNoLVBiV1B2NE9pWi13QU1GaV8vZXhlYw=='; 
+        const WEB_APP_URL = atob(ENCODED_WEB_APP_URL);
 
         let allKpiData = [];
         let currentJdText = '';
@@ -388,6 +438,10 @@
         // Decode default URL safely
         const ENCODED_GOOGLE_SHEET_URL = 'aHR0cHM6Ly9kb2NzLmdvb2dsZS5jb20vc3ByZWFkc2hlZXRzL2QvMWhRWDFOTVNfZGhNQlg4OGtwMG93MG50WEwxU2h4LUh4aWU1N2JSX195aGMvZWRpdD91c3A9c2hhcmluZw==';
         const DEFAULT_GOOGLE_SHEET_URL = atob(ENCODED_GOOGLE_SHEET_URL);
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-theme');
+        }
 
         function showStatus(message, type) {
             const statusDiv = document.getElementById('statusMessage');
@@ -424,26 +478,55 @@
         function validateKpiSelections() {
             let allValid = true;
             
+            // Validate KRA section level
             document.querySelectorAll('.kra-section').forEach(section => {
                 const safeId = section.dataset.kraid;
                 const valSpan = document.getElementById(`valid-${safeId}`);
-                if(!valSpan) return;
+                if (!valSpan) return;
                 
                 const checkboxes = section.querySelectorAll('input[type="checkbox"]');
                 const checkedCount = section.querySelectorAll('input[type="checkbox"]:checked').length;
                 const totalCount = checkboxes.length;
-                const required = Math.min(3, totalCount);
+                const required = Math.min(2, totalCount);
 
-                // STRICT RULE: ALL OPEN KRA PANELS MUST HAVE KPI SELECTION.
-                if (checkedCount < required) {
+                if (checkedCount > 0 && checkedCount < required) {
                     valSpan.style.display = 'inline';
                     valSpan.textContent = `Required: ${required} KPIs (Found ${checkedCount})`;
                     valSpan.className = 'kra-validation error';
+                    section.dataset.selected = "true";
                     allValid = false;
-                } else {
+                } else if (checkedCount >= required) {
                     valSpan.style.display = 'inline';
                     valSpan.textContent = `Valid (${checkedCount} selected)`;
                     valSpan.className = 'kra-validation success';
+                    section.dataset.selected = "true";
+                } else {
+                    valSpan.style.display = 'none';
+                    section.dataset.selected = "false";
+                }
+            });
+
+            // Validate BSC section level
+            document.querySelectorAll('.bsc-section').forEach((bscSection) => {
+                const header = bscSection.querySelector('.bsc-header');
+                let bscMsg = bscSection.querySelector('.bsc-validation');
+                if (!bscMsg) {
+                    bscMsg = document.createElement('span');
+                    bscMsg.className = 'bsc-validation';
+                    header.appendChild(bscMsg);
+                }
+
+                const selectedKras = Array.from(bscSection.querySelectorAll('.kra-section')).filter(kra => kra.dataset.selected === "true").length;
+                
+                if (selectedKras < 1) {
+                    bscMsg.textContent = "Required: Select at least 1 KRA";
+                    bscMsg.className = 'bsc-validation error';
+                    bscMsg.style.display = 'inline-block';
+                    allValid = false;
+                } else {
+                    bscMsg.textContent = "Valid";
+                    bscMsg.className = 'bsc-validation success';
+                    bscMsg.style.display = 'inline-block';
                 }
             });
             
@@ -455,7 +538,6 @@
             const department = document.getElementById('department').value;
             const container = document.getElementById('hierarchyContainer');
 
-            // Find currently checked KPIs to preserve them if filters change
             const checkedKpis = Array.from(document.querySelectorAll('.kpi-label input[type="checkbox"]:checked')).map(cb => cb.value);
 
             const filteredData = allKpiData.filter(item => {
@@ -471,7 +553,6 @@
 
             container.innerHTML = '';
 
-            // Group by BSC Area
             const bscMap = new Map();
             filteredData.forEach(item => {
                 const bsc = item['BSC_Area_Focus'] || 'Unspecified BSC Area';
@@ -486,17 +567,20 @@
                 bscSection.className = 'bsc-section';
                 
                 const bscHeader = document.createElement('h3');
-                bscHeader.textContent = bscName;
                 bscHeader.className = 'bsc-header accordion-header';
-                bscHeader.onclick = () => bscHeader.classList.toggle('active');
+                bscHeader.innerHTML = `<span>${bscName}</span>`;
+                bscHeader.onclick = (e) => {
+                    // Prevent toggling if user clicks the validation badge
+                    if(!e.target.classList.contains('bsc-validation')){
+                        bscHeader.classList.toggle('active');
+                    }
+                };
                 
-                // Keep the first item toggled open by default
                 if(index === 0) bscHeader.classList.add('active');
 
                 const bscContent = document.createElement('div');
                 bscContent.className = 'bsc-content accordion-content';
 
-                // Group by KRA
                 const bscItems = bscMap.get(bscName);
                 const kraMap = new Map();
                 bscItems.forEach(item => {
@@ -514,10 +598,11 @@
                     kraSection.className = 'kra-section';
                     const safeId = kraName.replace(/[^a-zA-Z0-9]/g, '') + Math.floor(Math.random()*1000);
                     kraSection.dataset.kraid = safeId;
+                    kraSection.dataset.selected = "false";
                     
                     const kraHeader = document.createElement('div');
                     kraHeader.className = 'kra-header accordion-header';
-                    kraHeader.innerHTML = `<span>${kraName}</span> <span class="kra-validation" id="valid-${safeId}"></span>`;
+                    kraHeader.innerHTML = `<span>${kraName}</span> <span class="kra-validation" id="valid-${safeId}" style="display:none;"></span>`;
                     kraHeader.onclick = () => kraHeader.classList.toggle('active');
                     
                     const kraContent = document.createElement('div');
@@ -568,7 +653,6 @@
                 container.appendChild(bscSection);
             });
             
-            // Re-validate UI
             validateKpiSelections();
         }
 
@@ -588,7 +672,6 @@
                     }
                 }
 
-                // --- SPEED BOOST: Local Caching ---
                 const cachedData = localStorage.getItem('kpiDataCache');
                 if (cachedData) {
                     try {
@@ -597,7 +680,6 @@
                         populateDropdown('managementLevel', 'Management_Level', allKpiData);
                         populateDropdown('department', 'Department', allKpiData);
                         updateDashboard();
-                        // Dashboard loaded instantly! Fetching fresh data in the background context.
                     } catch(e) { console.error("Cache parsing error"); }
                 } else {
                     showStatus('Connecting to datadump (This will only take a few seconds on your first visit!)...', 'info');
@@ -654,16 +736,10 @@
 
         function showJdForm() {
             if (!validateKpiSelections()) {
-                alert("ACCESS DENIED: Minimum 3 KPIs must be selected in EACH generated KRA section.");
+                alert("ACCESS DENIED: Please ensure EVERY BSC Area has at least 1 KRA selected, and every selected KRA has at least 2 KPIs checked.");
                 return;
             }
             
-            const checkedKpis = document.querySelectorAll('.kpi-label input[type="checkbox"]:checked');
-            if(checkedKpis.length === 0) {
-                alert("Nothing active. Select targets first.");
-                return;
-            }
-
             document.getElementById('jdInputSection').style.display = 'block';
             document.getElementById('jdDisplaySection').style.display = 'none';
             document.getElementById('jdModal').style.display = 'flex';
@@ -687,7 +763,7 @@
             const department = document.getElementById('department').value;
 
             if (!employeeName || !employeeId) {
-                alert('Fill in identity registers.');
+                alert('Fill in employee details.');
                 return;
             }
 
@@ -752,7 +828,7 @@
 
                 await logUsageToSheet();
                 
-                btn.textContent = "Transmission Complete";
+                btn.textContent = "Data Saved";
                 setTimeout(() => {
                     btn.textContent = originalText;
                     btn.disabled = false;
@@ -760,7 +836,7 @@
                 }, 2000);
 
             } catch (err) {
-                console.error('Core dump: ', err);
+                console.error('Error: ', err);
                 alert('Buffer fail. Please copy manually.');
             }
         }
@@ -777,7 +853,7 @@
             const payload = {
                 employeeId: employeeId,
                 employeeName: employeeName,
-                timestamp: new Date().toISOString()
+                Time: new Date().toLocaleString()
             };
 
             try {
@@ -790,7 +866,7 @@
                     body: JSON.stringify(payload)
                 });
             } catch (e) {
-                console.error("Webhook trace loss:", e);
+                console.error("Webhook loss:", e);
             }
         }
 
