@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,40 +8,192 @@
     <!-- Embedded jsPDF and jspdf-autotable content -->
     <script>
         // jsPDF and jspdf-autotable are no longer strictly needed for text display, but keeping the includes just in case for other functionality or future changes.
-        ${JSPDF_CONTENT}
+        ${ JSPDF_CONTENT }
     </script>
     <script>
-        ${JSPDF_AUTOTABLE_CONTENT}
+        ${ JSPDF_AUTOTABLE_CONTENT }
     </script>
     <style>
-        body {font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #333; text-align: center; }
-        .filters { display: flex; justify-content: space-around; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; padding: 15px; border: 1px solid #eee; border-radius: 5px; background: #f9f9f9; }
-        .filter-group label { margin-right: 10px; font-weight: bold; }
-        input[type="text"] { margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 300px; }
-        button { padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
-        button:hover { background-color: #0056b3; }
-        .dashboard-section { border: 1px solid #ddd; padding: 15px; margin-top: 20px; border-radius: 5px; background: #fff; }
-        .kpi-list ul { list-style-type: none; padding: 0; }
-        .kpi-list li { background: #e9e9e9; margin-bottom: 8px; padding: 10px; border-radius: 4px; }
-        .kra-list-item { margin-bottom: 5px; }
-        .status-message { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
-        .status-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .status-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .status-info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #000000;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        .filters {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+
+        .filter-group label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            margin-bottom: 10px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 300px;
+        }
+
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #df9c16;
+        }
+
+        .dashboard-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            background: #fff;
+        }
+
+        .kpi-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .kpi-list li {
+            background: #e9e9e9;
+            margin-bottom: 8px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .kra-list-item {
+            margin-bottom: 5px;
+        }
+
+        .status-message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
 
         /* Modal styles */
-        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); justify-content: center; align-items: center; }
-        .modal-content { background-color: #fefefe; margin: auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; position: relative; }
-        .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-        .close-button:hover, .close-button:focus { color: black; text-decoration: none; cursor: pointer; }
-        .modal-content label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .modal-content input[type="text"] { width: calc(100% - 22px); padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; }
-        .modal-footer { text-align: right; margin-top: 20px; }
-        #jdOutput { white-space: pre-wrap; font-family: monospace; border: 1px solid #ccc; padding: 10px; margin-top: 15px; background-color: #f9f9f9; max-height: 400px; overflow-y: auto; }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-content label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .modal-content input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .modal-footer {
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        #jdOutput {
+            white-space: pre-wrap;
+            font-family: monospace;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 15px;
+            background-color: #f9f9f9;
+            max-height: 400px;
+            overflow-y: auto;
+        }
     </style>
 </head>
+
 <body>
 
     <div class="container">
@@ -277,23 +430,23 @@
             // Convert the shareable URL to a CSV export URL
             let csvExportUrl = shareableUrl.replace('/edit#gid=', '/export?format=csv&gid=');
             if (!csvExportUrl.includes('/export?format=csv')) {
-                 // Handle cases where the URL might be a shortened one or missing gid, try a generic conversion
-                 const match = shareableUrl.match(/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
-                 if (match && match[1]) {
-                     csvExportUrl = `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`;
-                     // Attempt to extract gid if available, though not always in the 'edit' part
-                     const gidMatch = shareableUrl.match(/#gid=(\d+)/);
-                     if (gidMatch && gidMatch[1]) {
-                         csvExportUrl += `&gid=${gidMatch[1]}`;
-                     }
-                 }
-                 else {
-                     showStatus('Could not parse Google Sheet URL. Please ensure it\'s a valid shareable link.', 'error');
-                     kraDisplayArea.innerHTML = '<p>*Error loading data*</p>';
-                     kpiDisplayArea.innerHTML = '<li>*Error loading data*</li>';
-                     allKpiData = [];
-                     return;
-                 }
+                // Handle cases where the URL might be a shortened one or missing gid, try a generic conversion
+                const match = shareableUrl.match(/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+                if (match && match[1]) {
+                    csvExportUrl = `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`;
+                    // Attempt to extract gid if available, though not always in the 'edit' part
+                    const gidMatch = shareableUrl.match(/#gid=(\d+)/);
+                    if (gidMatch && gidMatch[1]) {
+                        csvExportUrl += `&gid=${gidMatch[1]}`;
+                    }
+                }
+                else {
+                    showStatus('Could not parse Google Sheet URL. Please ensure it\'s a valid shareable link.', 'error');
+                    kraDisplayArea.innerHTML = '<p>*Error loading data*</p>';
+                    kpiDisplayArea.innerHTML = '<li>*Error loading data*</li>';
+                    allKpiData = [];
+                    return;
+                }
             }
 
             showStatus('Fetching data from Google Sheet...', 'info');
@@ -316,7 +469,7 @@
 
                     updateDashboard(); // Initial dashboard update to populate KRAs and KPIs
                 }
-                 else {
+                else {
                     showStatus('Google Sheet is empty or could not be parsed.', 'error');
                     kraDisplayArea.innerHTML = '<p>*No data found in Google Sheet*</p>';
                     kpiDisplayArea.innerHTML = '<li>*No data found in Google Sheet*</li>';
@@ -444,9 +597,9 @@
 
         function copyJdToClipboard() {
             if (currentJdText) {
-                navigator.clipboard.writeText(currentJdText).then(function() {
+                navigator.clipboard.writeText(currentJdText).then(function () {
                     alert('Job Description copied to clipboard!');
-                }).catch(function(err) {
+                }).catch(function (err) {
                     console.error('Failed to copy text: ', err);
                     alert('Failed to copy Job Description to clipboard. Please try again or copy manually.');
                 });
@@ -457,4 +610,5 @@
     </script>
 
 </body>
+
 </html>
