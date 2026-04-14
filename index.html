@@ -1,282 +1,374 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KPI Dashboard from Google Sheet</title>
-    <!-- Embedded jsPDF and jspdf-autotable content -->
+    <title>KPI Dashboard</title>
+    <!-- Keep previous script injections if any -->
     <script>
-        // jsPDF and jspdf-autotable are no longer strictly needed for text display, but keeping the includes just in case for other functionality or future changes.
         ${ JSPDF_CONTENT }
     </script>
     <script>
         ${ JSPDF_AUTOTABLE_CONTENT }
     </script>
     <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --card-border: #333;
+            --accent-color: #00e5ff;
+            --accent-hover: #00b3cc;
+            --error-color: #ff5252;
+            --success-color: #69f0ae;
+            --input-bg: #2c2c2c;
+            --font-family: system-ui, -apple-system, blinkmacsystemfont, 'Segoe UI', roboto, oxygen, ubuntu, cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #000000;
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1100px;
             margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--card-border);
         }
 
-        h1 {
-            color: #333;
-            text-align: center;
-        }
+        h1, h2, h3, h4 { color: #fff; margin-top: 0; }
+        h1 { text-align: center; margin-bottom: 30px; letter-spacing: 1px; font-weight: 500;}
 
         .filters {
             display: flex;
-            justify-content: space-around;
-            margin-bottom: 20px;
+            justify-content: center;
             flex-wrap: wrap;
-            gap: 15px;
-            padding: 15px;
-            border: 1px solid #eee;
-            border-radius: 5px;
-            background: #f9f9f9;
+            gap: 30px;
+            padding: 25px;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            background: #181818;
+            margin-bottom: 30px;
         }
 
+        .filter-group { flex: 1; min-width: 250px; max-width: 400px; }
         .filter-group label {
-            margin-right: 10px;
-            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #aaa;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        input[type="text"] {
-            margin-bottom: 10px;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            width: 300px;
+        select, input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            background-color: var(--input-bg);
+            color: #fff;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            box-sizing: border-box;
+        }
+        
+        select:focus, input[type="text"]:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.2);
         }
 
         button {
-            padding: 8px 15px;
-            background-color: #007bff;
-            color: white;
+            padding: 12px 24px;
+            background-color: var(--accent-color);
+            color: #000;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            margin-top: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 229, 255, 0.15);
         }
 
         button:hover {
-            background-color: #df9c16;
+            background-color: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 229, 255, 0.25);
         }
+        
+        button:active { transform: translateY(0); }
+        button:disabled { background-color: #555; color: #888; cursor: not-allowed; box-shadow: none; transform: none;}
 
-        .dashboard-section {
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin-top: 20px;
-            border-radius: 5px;
-            background: #fff;
-        }
+        /* --- Tree / Accordion Styling --- */
+        .hierarchy-container { margin-top: 20px; }
 
-        .kpi-list ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        .kpi-list li {
-            background: #e9e9e9;
-            margin-bottom: 8px;
-            padding: 10px;
-            border-radius: 4px;
-        }
-
-        .kra-list-item {
-            margin-bottom: 5px;
-        }
-
-        .status-message {
-            padding: 10px;
+        .bsc-section {
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
             margin-bottom: 15px;
-            border-radius: 4px;
+            background: #232323;
+            overflow: hidden;
         }
 
-        .status-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .accordion-header {
+            padding: 16px 20px;
+            background: #2a2a2a;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+            margin: 0;
+            font-size: 1.1em;
         }
 
-        .status-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        .accordion-header:hover { background: #333; }
+        .accordion-header::after {
+            content: '▼';
+            font-size: 0.8em;
+            transition: transform 0.3s;
+            color: #888;
+        }
+        .accordion-header.active::after { transform: rotate(180deg); color: #fff;}
+
+        .accordion-content {
+            display: none;
+            padding: 15px 20px;
+            border-top: 1px solid var(--card-border);
+            background: var(--card-bg);
+        }
+        .accordion-header.active + .accordion-content { display: block; }
+
+        .kra-section {
+            margin-bottom: 12px;
+            border: 1px solid #333;
+            border-radius: 6px;
+            overflow: hidden;
         }
 
-        .status-info {
-            background-color: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
+        .kra-header {
+            padding: 12px 15px;
+            background: #1f1f1f;
+            font-size: 1em;
+            border: none;
+            font-weight: 500;
         }
 
-        /* Modal styles */
+        .kra-content {
+            padding: 10px 15px;
+            background: #151515;
+            display: none;
+        }
+        .kra-header.active + .kra-content { display: block; }
+
+        .kpi-label {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #252525;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .kpi-label:hover { background: #2f2f2f; border-color: #444;}
+        
+        .kpi-label input[type="checkbox"] {
+            margin-top: 4px;
+            margin-right: 15px;
+            accent-color: var(--accent-color);
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        /* Validation UI */
+        .kra-validation {
+            font-size: 0.85em;
+            margin-left: 15px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            display: none;
+            font-weight: 600;
+        }
+        .kra-validation.error { color: #fff; background-color: var(--error-color); }
+        .kra-validation.success { color: #000; background-color: var(--success-color); }
+
+        /* Status messages */
+        .status-message {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            display: none;
+            font-weight: 500;
+        }
+        .status-success { background-color: rgba(105, 240, 174, 0.1); color: var(--success-color); border: 1px solid var(--success-color); }
+        .status-error { background-color: rgba(255, 82, 82, 0.1); color: var(--error-color); border: 1px solid var(--error-color); }
+        .status-info { background-color: rgba(0, 229, 255, 0.1); color: var(--accent-color); border: 1px solid var(--accent-color); }
+
+        /* Modal styling */
         .modal {
             display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.4);
-            justify-content: center;
-            align-items: center;
+            position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(4px);
+            justify-content: center; align-items: center;
         }
-
         .modal-content {
-            background-color: #fefefe;
-            margin: auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 600px;
-            border-radius: 8px;
+            background-color: var(--card-bg);
+            padding: 35px;
+            border: 1px solid var(--card-border);
+            width: 90%; max-width: 650px;
+            border-radius: 12px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.8);
             position: relative;
         }
-
         .close-button {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
+            color: #666;
+            position: absolute; right: 25px; top: 20px;
+            font-size: 28px; font-weight: bold; cursor: pointer;
+            transition: color 0.2s;
         }
+        .close-button:hover { color: #fff; }
 
-        .close-button:hover,
-        .close-button:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .modal-content label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        .modal-content input[type="text"] {
-            width: calc(100% - 22px);
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        .modal-footer {
-            text-align: right;
-            margin-top: 20px;
-        }
-
+        .modal-footer { margin-top: 30px; text-align: right; display: flex; gap: 12px; justify-content: flex-end;}
+        
         #jdOutput {
             white-space: pre-wrap;
-            font-family: monospace;
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin-top: 15px;
-            background-color: #f9f9f9;
+            font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+            background-color: #0a0a0a;
+            border: 1px solid #333;
+            color: #a9dc76;
+            padding: 20px;
+            border-radius: 8px;
             max-height: 400px;
             overflow-y: auto;
+            margin-top: 15px;
+            font-size: 0.9em;
+            line-height: 1.5;
         }
+
+        .script-info {
+            background: rgba(0, 229, 255, 0.05);
+            padding: 15px; 
+            border-left: 4px solid var(--accent-color);
+            margin-bottom: 25px; 
+            font-size: 0.9em; 
+            border-radius: 0 6px 6px 0;
+            color: #ccc;
+        }
+        .script-info code {
+            background: #000; padding: 2px 6px; border-radius: 4px; color: var(--accent-color);
+        }
+
+        .center-btn { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #333; }
+        
+        .main-title { color: var(--accent-color); display: inline-block; background: -webkit-linear-gradient(#00e5ff, #00b3cc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
+        
+        .no-data { text-align: center; color: #888; font-style: italic; padding: 40px; }
     </style>
 </head>
-
 <body>
 
     <div class="container">
-        <h1>Employee KPI Dashboard (Google Sheet Data)</h1>
+        <h1>KPI Dashboard <span class="main-title">Pro</span></h1>
 
-        <div id="statusMessage" class="status-message status-info" style="display: none;"></div>
+        <div id="statusMessage" class="status-message status-info"></div>
 
         <div class="filters">
-
             <div class="filter-group">
-                <label for="managementLevel">Management Level:</label>
+                <label for="managementLevel">Management Level</label>
                 <select id="managementLevel" onchange="updateDashboard()">
                     <option value="">All Levels</option>
                 </select>
             </div>
 
             <div class="filter-group">
-                <label for="department">Department:</label>
+                <label for="department">Department</label>
                 <select id="department" onchange="updateDashboard()">
                     <option value="">All Departments</option>
                 </select>
             </div>
+        </div>
 
-            <div class="filter-group">
-                <label for="bscArea">BSC Area Focus:</label>
-                <select id="bscArea" onchange="updateDashboard()">
-                    <option value="">All Areas</option>
-                </select>
+        <div class="hierarchy-section">
+            <h2>Select Key Performance Indicators</h2>
+            <p style="color: #aaa; font-size: 0.9em;">Expand a BSC Area to view KRAs. Each selected KRA must have a minimum of 3 KPIs connected to it.</p>
+            <div id="hierarchyContainer" class="hierarchy-container">
+                <div class="no-data">Data is loading...</div>
             </div>
         </div>
 
-        <div class="dashboard-section">
-            <h2>Key Result Areas (KRAs): <small>(Select to filter KPIs)</small></h2>
-            <div class="kra-list" id="kraDisplayArea">
-                <p>*Load data and select filters to see KRAs*</p>
-            </div>
-        </div>
-
-        <div class="dashboard-section">
-            <h2>Selected KPIs:</h2>
-            <div class="kpi-list" id="kpiDisplayArea">
-                <ul>
-                    <li>*Load data and select filters to see KPIs*</li>
-                </ul>
-            </div>
-        </div>
-
-        <div style="text-align: center; margin-top: 20px;">
-            <button onclick="showJdForm()">Generate Job Description (JD)</button>
+        <div class="center-btn">
+            <button id="generateBtn" onclick="showJdForm()">Proceed to Generate Job Description</button>
         </div>
     </div>
 
-    <!-- JD Display Modal -->
+    <!-- JD Input Modal -->
     <div id="jdModal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="hideJdForm()">&times;</span>
-            <h2>Generate Job Description (JD)</h2>
+            
             <div id="jdInputSection">
-                <label for="employeeName">Employee Name:</label>
-                <input type="text" id="employeeName" placeholder="Enter Employee Name">
-                <label for="employeeId">Employee ID:</label>
-                <input type="text" id="employeeId" placeholder="Enter Employee ID">
+                <h2 style="margin-bottom: 20px;">Employee Information</h2>
+                
+                <div class="script-info">
+                    <strong>Notice:</strong> Submitting this form will record the copy event to the "Login Data" sheet. <br><br>
+                    <em>Setup Required:</em> In your Google Sheet, go to Extensions &gt; Apps Script, add the provided webhook script, deploy it as a Web App, and update the <code>WEB_APP_URL</code> in this HTML file.
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label for="employeeName" style="display:block; margin-bottom: 5px; color: #ccc;">Employee Name</label>
+                    <input type="text" id="employeeName" placeholder="Enter full name">
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <label for="employeeId" style="display:block; margin-bottom: 5px; color: #ccc;">Employee ID</label>
+                    <input type="text" id="employeeId" placeholder="Enter ID number">
+                </div>
+                
                 <div class="modal-footer">
-                    <button onclick="displayJdText()">Generate JD</button>
+                    <button onclick="hideJdForm()" style="background: transparent; color: #fff; border: 1px solid #555;">Cancel</button>
+                    <button id="btnGenerateReport" onclick="displayJdText()">Generate Report</button>
                 </div>
             </div>
+            
             <div id="jdDisplaySection" style="display:none;">
-                <h3>Generated Job Description</h3>
+                <h2>Generated Job Description</h2>
                 <pre id="jdOutput"></pre>
+                
                 <div class="modal-footer">
-                    <button onclick="copyJdToClipboard()">Copy to Clipboard</button>
-                    <button onclick="resetJdForm()">Back to Input</button>
+                    <button onclick="resetJdForm()" style="background: transparent; color: #fff; border: 1px solid #555;">Back</button>
+                    <button id="btnCopyData" onclick="copyJdToClipboard()">Copy & Record to Sheet</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        let allKpiData = []; // Store the parsed data globally
-        let currentFilteredDataByTopLevel = []; // Global to store data filtered by top-level dropdowns
-        let currentJdText = ''; // To store the generated JD text for copying
+        // CONFIGURATION: Set this to the Web App URL generated by Google Apps Script
+        const WEB_APP_URL = ''; // e.g., 'https://script.google.com/macros/s/AKfyc.../exec'
+
+        let allKpiData = [];
+        let currentJdText = '';
+        
+        // Decode default URL safely
         const ENCODED_GOOGLE_SHEET_URL = 'aHR0cHM6Ly9kb2NzLmdvb2dsZS5jb20vc3ByZWFkc2hlZXRzL2QvMWhRWDFOTVNfZGhNQlg4OGtwMG93MG50WEwxU2h4LUh4aWU1N2JSX195aGMvZWRpdD91c3A9c2hhcmluZw==';
-        const DEFAULT_GOOGLE_SHEET_URL = atob(ENCODED_GOOGLE_SHEET_URL); // Decode in JavaScript
+        const DEFAULT_GOOGLE_SHEET_URL = atob(ENCODED_GOOGLE_SHEET_URL);
 
         function showStatus(message, type) {
             const statusDiv = document.getElementById('statusMessage');
@@ -291,222 +383,242 @@
 
         function populateDropdown(selectId, dataColumn, data) {
             const selectElement = document.getElementById(selectId);
-            const currentValue = selectElement.value; // Store current selected value
-            selectElement.innerHTML = '<option value="">All ' + selectId.replace(/([A-Z])/g, ' $1').trim() + 's</option>';
-            const uniqueValues = [...new Set(data.map(item => item[dataColumn]))].sort();
+            const currentValue = selectElement.value;
+            selectElement.innerHTML = `<option value="">All ${selectId.replace(/([A-Z])/g, ' $1').trim()}s</option>`;
+            
+            const uniqueValues = [...new Set(data.map(item => item[dataColumn]))]
+                .filter(val => val && val.trim() !== '')
+                .sort();
+                
             uniqueValues.forEach(value => {
-                if (value && value.trim() !== '') {
-                    const option = document.createElement('option');
-                    option.value = value;
-                    option.textContent = value;
-                    selectElement.appendChild(option);
-                }
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = value;
+                selectElement.appendChild(option);
             });
-            // Attempt to restore the previously selected value, if it still exists
+            
             if ([...uniqueValues, ''].includes(currentValue)) {
                 selectElement.value = currentValue;
             }
         }
 
-        // Function to update only the KRA checkboxes (used when top-level filters change)
-        function updateKraCheckboxes(dataToDisplayKRAs, selectedKRAsToPreserve = []) {
-            const kraDisplayArea = document.getElementById('kraDisplayArea');
-            kraDisplayArea.innerHTML = ''; // Clear previous KRAs
+        function validateKpiSelections() {
+            let allValid = true;
+            
+            document.querySelectorAll('.kra-section').forEach(section => {
+                const safeId = section.dataset.kraid;
+                const valSpan = document.getElementById(`valid-${safeId}`);
+                if(!valSpan) return;
+                
+                const checkboxes = section.querySelectorAll('input[type="checkbox"]');
+                const checkedCount = section.querySelectorAll('input[type="checkbox"]:checked').length;
+                const totalCount = checkboxes.length;
+                const required = Math.min(3, totalCount);
 
-            const uniqueKRAs = [...new Set(dataToDisplayKRAs.map(item => item['KRA']))].filter(kra => kra && kra.trim() !== '').sort();
-
-            if (uniqueKRAs.length > 0) {
-                uniqueKRAs.forEach(kra => {
-                    const div = document.createElement('div');
-                    div.className = 'kra-list-item';
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.id = `kra-${kra.replace(/[^a-zA-Z0-9]/g, '')}`;
-                    checkbox.value = kra;
-                    checkbox.onchange = filterKpisByKraSelection; // New handler for KRA checkboxes
-
-                    // Set checked state if previously selected
-                    if (selectedKRAsToPreserve.includes(kra)) {
-                        checkbox.checked = true;
-                    }
-
-                    const label = document.createElement('label');
-                    label.htmlFor = checkbox.id;
-                    label.textContent = kra;
-                    div.appendChild(checkbox);
-                    div.appendChild(label);
-                    kraDisplayArea.appendChild(div);
-                });
-            } else {
-                kraDisplayArea.innerHTML = '<p>No KRAs found for the selected filters.</p>';
-            }
-        }
-
-        // Function to filter and display KPIs based on current KRA checkbox selections
-        function filterKpisByKraSelection() {
-            const kpiDisplayArea = document.getElementById('kpiDisplayArea').querySelector('ul');
-            kpiDisplayArea.innerHTML = ''; // Clear previous KPIs
-
-            const selectedKRACheckboxes = document.querySelectorAll('#kraDisplayArea input[type="checkbox"]:checked');
-            const selectedKRAs = Array.from(selectedKRACheckboxes).map(cb => cb.value);
-
-            let kpiFilteredData = [];
-            if (selectedKRAs.length > 0) {
-                kpiFilteredData = currentFilteredDataByTopLevel.filter(item => selectedKRAs.includes(item['KRA']));
-            } else {
-                kpiFilteredData = currentFilteredDataByTopLevel; // If no KRA selected, show all KPIs from top-level filter
-            }
-
-            // Display KPIs
-            const kpiColumns = ['KPI 1', 'KPI 2', 'KPI 3', 'KPI 4', 'KPI 5'];
-            let kpiFound = false;
-            const displayedKpis = new Set();
-
-            if (kpiFilteredData.length > 0) {
-                kpiFilteredData.forEach(item => {
-                    kpiColumns.forEach(colName => {
-                        if (item[colName] && item[colName].trim() !== '') {
-                            const kpiText = item[colName].trim();
-                            if (!displayedKpis.has(kpiText)) {
-                                const listItem = document.createElement('li');
-                                listItem.textContent = kpiText;
-                                kpiDisplayArea.appendChild(listItem);
-                                displayedKpis.add(kpiText);
-                                kpiFound = true;
-                            }
-                        }
-                    });
-                });
-            }
-
-            if (!kpiFound) {
-                kpiDisplayArea.innerHTML = '<li>No KPIs found for the selected filters.</li>';
-            }
+                if (checkedCount > 0 && checkedCount < required) {
+                    valSpan.style.display = 'inline';
+                    valSpan.textContent = `Need ${required} KPIs (Selected ${checkedCount})`;
+                    valSpan.className = 'kra-validation error';
+                    allValid = false;
+                } else if (checkedCount >= required) {
+                    valSpan.style.display = 'inline';
+                    valSpan.textContent = `Valid (${checkedCount} selected)`;
+                    valSpan.className = 'kra-validation success';
+                } else {
+                    valSpan.style.display = 'none'; // None selected for this KRA, meaning they don't want it.
+                }
+            });
+            
+            return allValid;
         }
 
         function updateDashboard() {
             const managementLevel = document.getElementById('managementLevel').value;
             const department = document.getElementById('department').value;
-            const bscArea = document.getElementById('bscArea').value;
+            const container = document.getElementById('hierarchyContainer');
 
-            // Capture currently selected KRAs before re-populating the KRA section
-            const existingCheckboxes = document.querySelectorAll('#kraDisplayArea input[type="checkbox"]:checked');
-            const previouslySelectedKRAs = Array.from(existingCheckboxes).map(cb => cb.value);
+            // Find currently checked KPIs to preserve them if filters change
+            const checkedKpis = Array.from(document.querySelectorAll('.kpi-label input[type="checkbox"]:checked')).map(cb => cb.value);
 
-            currentFilteredDataByTopLevel = allKpiData.filter(item => {
+            const filteredData = allKpiData.filter(item => {
                 const levelMatch = managementLevel === '' || item['Management_Level'] === managementLevel;
                 const deptMatch = department === '' || item['Department'] === department;
-                const bscMatch = bscArea === '' || item['BSC_Area_Focus'] === bscArea;
-                return levelMatch && deptMatch && bscMatch;
+                return levelMatch && deptMatch;
             });
 
-            if (currentFilteredDataByTopLevel.length === 0) {
-                document.getElementById('kraDisplayArea').innerHTML = '<p>No data found for the selected filters.</p>';
-                document.getElementById('kpiDisplayArea').querySelector('ul').innerHTML = '<li>No KPIs found for the selected filters.</li>';
+            if (filteredData.length === 0) {
+                container.innerHTML = '<div class="no-data">No data found for the selected filters.</div>';
                 return;
             }
 
-            // Update KRA checkboxes, preserving previously selected ones
-            updateKraCheckboxes(currentFilteredDataByTopLevel, previouslySelectedKRAs);
+            container.innerHTML = '';
 
-            // Filter and display KPIs based on the (potentially preserved) KRA selections
-            filterKpisByKraSelection();
+            // Group by BSC Area
+            const bscMap = new Map();
+            filteredData.forEach(item => {
+                const bsc = item['BSC_Area_Focus'] || 'Unspecified BSC Area';
+                if (!bscMap.has(bsc)) bscMap.set(bsc, []);
+                bscMap.get(bsc).push(item);
+            });
+
+            const sortedBsc = Array.from(bscMap.keys()).sort();
+            
+            sortedBsc.forEach(bscName => {
+                const bscSection = document.createElement('div');
+                bscSection.className = 'bsc-section';
+                
+                const bscHeader = document.createElement('h3');
+                bscHeader.textContent = bscName;
+                bscHeader.className = 'bsc-header accordion-header';
+                bscHeader.onclick = () => bscHeader.classList.toggle('active');
+                
+                const bscContent = document.createElement('div');
+                bscContent.className = 'bsc-content accordion-content';
+
+                // Group by KRA
+                const bscItems = bscMap.get(bscName);
+                const kraMap = new Map();
+                bscItems.forEach(item => {
+                    const kra = item['KRA'] || 'Unspecified KRA';
+                    if (!kraMap.has(kra)) kraMap.set(kra, []);
+                    kraMap.get(kra).push(item);
+                });
+
+                const sortedKra = Array.from(kraMap.keys()).sort();
+                
+                sortedKra.forEach(kraName => {
+                    const kraItems = kraMap.get(kraName);
+                    
+                    const kraSection = document.createElement('div');
+                    kraSection.className = 'kra-section';
+                    const safeId = kraName.replace(/[^a-zA-Z0-9]/g, '') + Math.floor(Math.random()*1000);
+                    kraSection.dataset.kraid = safeId;
+                    
+                    const kraHeader = document.createElement('div');
+                    kraHeader.className = 'kra-header accordion-header';
+                    kraHeader.innerHTML = `<span>${kraName}</span> <span class="kra-validation" id="valid-${safeId}"></span>`;
+                    kraHeader.onclick = () => kraHeader.classList.toggle('active');
+                    
+                    const kraContent = document.createElement('div');
+                    kraContent.className = 'kra-content accordion-content';
+                    
+                    const kpiSet = new Set();
+                    kraItems.forEach(item => {
+                        ['KPI 1', 'KPI 2', 'KPI 3', 'KPI 4', 'KPI 5'].forEach(col => {
+                            if(item[col] && item[col].trim() !== '') {
+                                kpiSet.add(item[col].trim());
+                            }
+                        });
+                    });
+                    
+                    if (kpiSet.size === 0) {
+                        kraContent.innerHTML = '<div style="color:#777; padding:5px;">No KPIs available for this KRA.</div>';
+                    } else {
+                        Array.from(kpiSet).sort().forEach(kpi => {
+                            const kpiLabel = document.createElement('label');
+                            kpiLabel.className = 'kpi-label';
+                            
+                            const checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            checkbox.value = kpi;
+                            checkbox.dataset.kra = kraName;
+                            checkbox.dataset.bsc = bscName;
+                            if (checkedKpis.includes(kpi)) {
+                                checkbox.checked = true;
+                                bscHeader.classList.add('active');
+                                kraHeader.classList.add('active');
+                            }
+                            
+                            checkbox.onchange = validateKpiSelections;
+                            
+                            kpiLabel.appendChild(checkbox);
+                            kpiLabel.appendChild(document.createTextNode(kpi));
+                            kraContent.appendChild(kpiLabel);
+                        });
+                    }
+                    
+                    kraSection.appendChild(kraHeader);
+                    kraSection.appendChild(kraContent);
+                    bscContent.appendChild(kraSection);
+                });
+                
+                bscSection.appendChild(bscHeader);
+                bscSection.appendChild(bscContent);
+                container.appendChild(bscSection);
+            });
+            
+            validateKpiSelections();
         }
 
         async function loadFromGoogleSheet() {
-            const shareableUrl = DEFAULT_GOOGLE_SHEET_URL;
-            const kraDisplayArea = document.getElementById('kraDisplayArea');
-            const kpiDisplayArea = document.getElementById('kpiDisplayArea').querySelector('ul');
-            hideStatus();
-
-            if (!shareableUrl || shareableUrl.trim() === '' || !shareableUrl.includes('docs.google.com/spreadsheets/d/')) {
-                showStatus('Default Google Sheet URL is invalid.', 'error');
-                kraDisplayArea.innerHTML = '<p>*Error loading data from default sheet*</p>';
-                kpiDisplayArea.innerHTML = '<li>*Error loading data from default sheet*</li>';
-                allKpiData = [];
-                return;
-            }
-
-            // Convert the shareable URL to a CSV export URL
-            let csvExportUrl = shareableUrl.replace('/edit#gid=', '/export?format=csv&gid=');
-            if (!csvExportUrl.includes('/export?format=csv')) {
-                // Handle cases where the URL might be a shortened one or missing gid, try a generic conversion
-                const match = shareableUrl.match(/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
-                if (match && match[1]) {
-                    csvExportUrl = `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`;
-                    // Attempt to extract gid if available, though not always in the 'edit' part
-                    const gidMatch = shareableUrl.match(/#gid=(\d+)/);
-                    if (gidMatch && gidMatch[1]) {
-                        csvExportUrl += `&gid=${gidMatch[1]}`;
+            showStatus('Fetching data from Google Sheet...', 'info');
+            
+            try {
+                let csvExportUrl = DEFAULT_GOOGLE_SHEET_URL.replace('/edit#gid=', '/export?format=csv&gid=');
+                if (!csvExportUrl.includes('/export?format=csv')) {
+                    const match = DEFAULT_GOOGLE_SHEET_URL.match(/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+                    if (match) {
+                        csvExportUrl = `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`;
+                        const gidMatch = DEFAULT_GOOGLE_SHEET_URL.match(/#gid=(\d+)/);
+                        if (gidMatch) {
+                            csvExportUrl += `&gid=${gidMatch[1]}`;
+                        }
                     }
                 }
-                else {
-                    showStatus('Could not parse Google Sheet URL. Please ensure it\'s a valid shareable link.', 'error');
-                    kraDisplayArea.innerHTML = '<p>*Error loading data*</p>';
-                    kpiDisplayArea.innerHTML = '<li>*Error loading data*</li>';
-                    allKpiData = [];
-                    return;
-                }
-            }
 
-            showStatus('Fetching data from Google Sheet...', 'info');
-
-            try {
                 const response = await fetch(csvExportUrl);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}. Please check if the sheet is publicly accessible ('Anyone with the link')`);
-                }
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                
                 const csvData = await response.text();
-
                 allKpiData = parseCsvToObject(csvData);
+                
                 if (allKpiData.length > 0) {
-                    showStatus('Data loaded successfully from Google Sheet. Now apply filters.', 'success');
-
-                    // IMPORTANT: Replace these with your actual CSV column names
+                    hideStatus();
                     populateDropdown('managementLevel', 'Management_Level', allKpiData);
                     populateDropdown('department', 'Department', allKpiData);
-                    populateDropdown('bscArea', 'BSC_Area_Focus', allKpiData);
-
-                    updateDashboard(); // Initial dashboard update to populate KRAs and KPIs
-                }
-                else {
+                    updateDashboard();
+                } else {
                     showStatus('Google Sheet is empty or could not be parsed.', 'error');
-                    kraDisplayArea.innerHTML = '<p>*No data found in Google Sheet*</p>';
-                    kpiDisplayArea.innerHTML = '<li>*No data found in Google Sheet*</li>';
                 }
-            }
-            catch (error) {
+            } catch (error) {
                 showStatus(`Error loading data from Google Sheet: ${error.message}`, 'error');
-                kraDisplayArea.innerHTML = '<p>*Error loading data*</p>';
-                kpiDisplayArea.innerHTML = '<li>*Error loading data*</li>';
-                allKpiData = [];
             }
         }
 
         function parseCsvToObject(csv) {
             const lines = csv.split(/\r?\n/).filter(line => line.trim() !== '');
-            if (lines.length === 0) {
-                return [];
-            }
+            if (lines.length === 0) return [];
 
             const headers = lines[0].split(',').map(header => header.trim());
             const data = [];
 
             for (let i = 1; i < lines.length; i++) {
-                const cells = lines[i].split(',').map(cell => cell.trim());
-                if (cells.length === headers.length) {
-                    let rowObject = {};
-                    for (let j = 0; j < headers.length; j++) {
-                        rowObject[headers[j]] = cells[j];
+                const splitRegex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/; 
+                const cells = lines[i].split(splitRegex).map(cell => cell.replace(/^"|"$/g, '').trim());
+                
+                let rowObject = {};
+                for (let j = 0; j < headers.length; j++) {
+                    if (headers[j]) {
+                        rowObject[headers[j]] = cells[j] || '';
                     }
-                    data.push(rowObject);
                 }
+                data.push(rowObject);
             }
             return data;
         }
 
-        // Modal functions
         function showJdForm() {
+            if (!validateKpiSelections()) {
+                alert("Please ensure every selected KRA has at least 3 KPIs checked.");
+                return;
+            }
+            
+            const checkedKpis = document.querySelectorAll('.kpi-label input[type="checkbox"]:checked');
+            if(checkedKpis.length === 0) {
+                alert("You have not selected any KPIs yet.");
+                return;
+            }
+
             document.getElementById('jdInputSection').style.display = 'block';
             document.getElementById('jdDisplaySection').style.display = 'none';
             document.getElementById('jdModal').style.display = 'flex';
@@ -524,70 +636,57 @@
         }
 
         function displayJdText() {
-            const employeeName = document.getElementById('employeeName').value;
-            const employeeId = document.getElementById('employeeId').value;
+            const employeeName = document.getElementById('employeeName').value.trim();
+            const employeeId = document.getElementById('employeeId').value.trim();
             const managementLevel = document.getElementById('managementLevel').value;
             const department = document.getElementById('department').value;
-            const bscArea = document.getElementById('bscArea').value;
 
             if (!employeeName || !employeeId) {
-                alert('Please enter Employee Name and Employee ID to generate the JD.');
+                alert('Please enter both Employee Name and Employee ID.');
                 return;
             }
 
-            let jdContent = `Job Description - Avaada Electro Ltd.\n`;
-            jdContent += `MIDC Butibori, Nagpur, Maharashtra\n\n`;
+            let jdContent = `====================================================\n`;
+            jdContent += `        JOB DESCRIPTION - AVAADA ELECTRO LTD.       \n`;
+            jdContent += `        MIDC Butibori, Nagpur, Maharashtra          \n`;
+            jdContent += `====================================================\n\n`;
             jdContent += `Generated On: ${new Date().toLocaleDateString()}\n\n`;
-            jdContent += `Employee Details:\n`;
-            jdContent += `  Employee Name: ${employeeName}\n`;
-            jdContent += `  Employee ID: ${employeeId}\n\n`;
-            jdContent += `Role & Functional Placement:\n`;
-            jdContent += `  Management Level: ${managementLevel || 'Not Selected'}\n`;
-            jdContent += `  Department: ${department || 'Not Selected'}\n`;
-            jdContent += `  BSC Area Focus: ${bscArea || 'Not Selected'}\n\n`;
-            jdContent += `Performance Evaluation Framework:\n`;
+            
+            jdContent += `[EMPLOYEE DETAILS]\n`;
+            jdContent += `Name:         ${employeeName}\n`;
+            jdContent += `Employee ID:  ${employeeId}\n\n`;
+            
+            jdContent += `[ROLE & PLACEMENT]\n`;
+            jdContent += `Management Level: ${managementLevel || 'N/A'}\n`;
+            jdContent += `Department:       ${department || 'N/A'}\n\n`;
+            
+            jdContent += `[AGREED PERFORMANCE EVALUATION FRAMEWORK]\n\n`;
 
-            const selectedKRACheckboxes = document.querySelectorAll('#kraDisplayArea input[type="checkbox"]:checked');
-            const selectedKRAs = Array.from(selectedKRACheckboxes).map(cb => cb.value);
+            const checkboxes = document.querySelectorAll('.kpi-label input[type="checkbox"]:checked');
+            const selectionTree = new Map();
 
-            let kraKpiDataForDisplay = [];
-            if (selectedKRAs.length > 0) {
-                kraKpiDataForDisplay = currentFilteredDataByTopLevel.filter(item => selectedKRAs.includes(item['KRA']));
-            } else {
-                kraKpiDataForDisplay = currentFilteredDataByTopLevel;
-            }
+            checkboxes.forEach(cb => {
+                const bsc = cb.dataset.bsc;
+                const kra = cb.dataset.kra;
+                const kpi = cb.value;
 
-            const kpiColumns = ['KPI 1', 'KPI 2', 'KPI 3', 'KPI 4', 'KPI 5'];
-            const kraKpiMap = new Map();
-
-            kraKpiDataForDisplay.forEach(item => {
-                const kra = item['KRA'];
-                if (kra && kra.trim() !== '') {
-                    if (!kraKpiMap.has(kra)) {
-                        kraKpiMap.set(kra, new Set());
-                    }
-                    kpiColumns.forEach(colName => {
-                        if (item[colName] && item[colName].trim() !== '') {
-                            kraKpiMap.get(kra).add(item[colName].trim());
-                        }
-                    });
-                }
+                if (!selectionTree.has(bsc)) selectionTree.set(bsc, new Map());
+                const kraMap = selectionTree.get(bsc);
+                
+                if (!kraMap.has(kra)) kraMap.set(kra, []);
+                kraMap.get(kra).push(kpi);
             });
 
-            if (kraKpiMap.size > 0) {
-                kraKpiMap.forEach((kpis, kra) => {
+            selectionTree.forEach((kraMap, bsc) => {
+                jdContent += `> BSC AREA: ${bsc.toUpperCase()}\n`;
+                kraMap.forEach((kpis, kra) => {
                     jdContent += `  KRA: ${kra}\n`;
-                    if (kpis.size > 0) {
-                        kpis.forEach(kpi => {
-                            jdContent += `    - KPI: ${kpi}\n`;
-                        });
-                    } else {
-                        jdContent += `    - No KPIs defined for this KRA.\n`;
-                    }
+                    kpis.forEach(kpi => {
+                        jdContent += `       - ${kpi}\n`;
+                    });
+                    jdContent += `\n`;
                 });
-            } else {
-                jdContent += `  No KRAs/KPIs found for the current selection.\n`;
-            }
+            });
 
             currentJdText = jdContent;
             document.getElementById('jdOutput').textContent = jdContent;
@@ -595,20 +694,62 @@
             document.getElementById('jdDisplaySection').style.display = 'block';
         }
 
-        function copyJdToClipboard() {
-            if (currentJdText) {
-                navigator.clipboard.writeText(currentJdText).then(function () {
-                    alert('Job Description copied to clipboard!');
-                }).catch(function (err) {
-                    console.error('Failed to copy text: ', err);
-                    alert('Failed to copy Job Description to clipboard. Please try again or copy manually.');
+        async function copyJdToClipboard() {
+            if (!currentJdText) return;
+
+            try {
+                await navigator.clipboard.writeText(currentJdText);
+                
+                const btn = document.getElementById('btnCopyData');
+                const originalText = btn.textContent;
+                btn.textContent = "Copied! Logging...";
+                btn.disabled = true;
+
+                await logUsageToSheet();
+                
+                btn.textContent = "Data Recorded Successfully";
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                    hideJdForm();
+                }, 2000);
+
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                alert('Failed to copy. Please copy manually.');
+            }
+        }
+
+        async function logUsageToSheet() {
+            const employeeName = document.getElementById('employeeName').value.trim();
+            const employeeId = document.getElementById('employeeId').value.trim();
+            
+            if (!WEB_APP_URL) {
+                console.warn("WEB_APP_URL is not set. Cannot record payload.");
+                return Promise.resolve();
+            }
+
+            const payload = {
+                employeeId: employeeId,
+                employeeName: employeeName,
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
                 });
+            } catch (e) {
+                console.error("Error logging to sheet:", e);
             }
         }
 
         document.addEventListener('DOMContentLoaded', loadFromGoogleSheet);
     </script>
-
 </body>
-
 </html>
