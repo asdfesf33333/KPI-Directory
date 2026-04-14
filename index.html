@@ -378,7 +378,7 @@
 
         <div class="hierarchy-section">
             <h2 style="color: var(--accent-color);">Select Key Performance Indicators (KPI)</h2>
-            <p style="color: #888; font-size: 0.9em;">Rule: You must select EVERY BSC Area by choosing at least 1 KRA in each. For any selected KRA, at least 2 KPIs must be checked.</p>
+            <p style="color: #888; font-size: 0.9em;">Rule: You must select Every BSC Area by choosing at least 1 KRA in each. For any selected KRA, at least 2 KPIs must be checked.</p>
             <div id="hierarchyContainer" class="hierarchy-container">
                 <div class="no-data">System Initializing Data...</div>
             </div>
@@ -736,7 +736,7 @@
 
         function showJdForm() {
             if (!validateKpiSelections()) {
-                alert("ACCESS DENIED: Please ensure EVERY BSC Area has at least 1 KRA selected, and every selected KRA has at least 2 KPIs checked.");
+                alert("ACCESS DENIED: Please ensure Every BSC Area has at least 1 KRA selected, and every selected KRA has at least 2 KPIs checked.");
                 return;
             }
             
@@ -850,10 +850,14 @@
                 return Promise.resolve();
             }
 
+            const currentTime = new Date().toLocaleString();
             const payload = {
                 employeeId: employeeId,
                 employeeName: employeeName,
-                Time: new Date().toLocaleString()
+                timestamp: currentTime,
+                Timestamp: currentTime,
+                time: currentTime,
+                Time: currentTime
             };
 
             try {
