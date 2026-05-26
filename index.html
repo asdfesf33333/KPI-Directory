@@ -158,6 +158,15 @@
       box-sizing: border-box;
     }
 
+    /* Add horizontal spacing after each dropdown (select) */
+    .filter-group select {
+      margin-right: 10px;
+    }
+
+    .filter-group label {
+      margin-right: 8px;
+    }
+
     body:not(.light-theme) select,
     body:not(.light-theme) input[type="text"] {
       color: #fff;
@@ -335,10 +344,9 @@ background-size:400% 400%;animation:gradientShift 12s ease infinite;}
     }
 
     /* Validation UI */
-    .kra-validation,
-    .bsc-validation {
+    .kra-validation, .bsc-validation {
       font-size: 0.85em;
-      margin-left: 15px;
+      margin-left: 20px;
       padding: 3px 8px;
       border-radius: 4px;
       display: inline-block;
