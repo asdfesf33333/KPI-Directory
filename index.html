@@ -1,880 +1,1030 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KRA / KPI Directory</title>
-    <!-- Keep previous script injections if any -->
-    <script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KRA / KPI Directory</title>
+  <!-- Keep previous script injections if any -->
+  <script>
         ${ JSPDF_CONTENT }
-    </script>
-    <script>
+  </script>
+  <script>
         ${ JSPDF_AUTOTABLE_CONTENT }
-    </script>
-    <style>
-        :root {
-            --bg-color: #000000;
-            --text-color: #c5c6c7;
-            --card-bg: #000000;
-            --card-border: #8a2be2;
-            --accent-color: #b026ff;
-            --accent-hover: #8a2be2;
-            --error-color: #ff007f;
-            --success-color: #39ff14;
-            --neon-shadow: 0 0 10px var(--accent-color), 0 0 20px var(--accent-color);
-            --input-bg: #0b0c10;
-            --font-family: system-ui, -apple-system, blinkmacsystemfont, 'Segoe UI', roboto, oxygen, ubuntu, cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-        }
+  </script>
+  <style>
+    :root {
+      --bg-color: #000000;
+      --text-color: #c5c6c7;
+      --card-bg: #000000;
+      --card-border: #8a2be2;
+      --accent-color: #b026ff;
+      --accent-hover: #8a2be2;
+      --error-color: #ff007f;
+      --success-color: #39ff14;
+      --neon-shadow: 0 0 10px var(--accent-color), 0 0 20px var(--accent-color);
+      --input-bg: #0b0c10;
+      --font-family: system-ui, -apple-system, blinkmacsystemfont, 'Segoe UI', roboto, oxygen, ubuntu, cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
 
-        body.light-theme {
-            --bg-color: #f0f2f5;
-            --text-color: #333333;
-            --card-bg: #ffffff;
-            --card-border: #b026ff;
-            --accent-color: #8a2be2;
-            --accent-hover: #691ea0;
-            --input-bg: #ffffff;
-            --neon-shadow: 0 4px 15px rgba(138, 43, 226, 0.25);
-        }
+    body.light-theme {
+      --bg-color: #f0f2f5;
+      --text-color: #333333;
+      --card-bg: #ffffff;
+      --card-border: #b026ff;
+      --accent-color: #8a2be2;
+      --accent-hover: #691ea0;
+      --input-bg: #ffffff;
+      --neon-shadow: 0 4px 15px rgba(138, 43, 226, 0.25);
+    }
 
-        body {
-            font-family: var(--font-family);
-            margin: 0;
-            padding: 20px;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            line-height: 1.6;
-            transition: background-color 0.3s, color 0.3s;
-        }
+    body {
+      font-family: var(--font-family);
+      margin: 0;
+      padding: 20px;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      transition: background-color 0.3s, color 0.3s;
+    }
 
-        .container {
-            max-width: 1100px;
-            margin: auto;
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: var(--neon-shadow);
-            border: 1px solid var(--accent-color);
-            position: relative;
-        }
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: var(--neon-shadow);
+      border: 1px solid var(--accent-color);
+      position: relative;
+    }
 
-        .theme-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #ffffff;
-            border: 2px solid var(--accent-color);
-            color: var(--accent-color);
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-        .theme-toggle:hover {
-            background: var(--accent-color);
-            color: #ffffff;
-        }
+    .theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #ffffff;
+      border: 2px solid var(--accent-color);
+      color: var(--accent-color);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+    }
 
-        h1, h2, h3, h4 { color: var(--text-color); margin-top: 0; }
-        body:not(.light-theme) h1, body:not(.light-theme) h2, body:not(.light-theme) h3, body:not(.light-theme) h4 { color: #fff; }
-        
-        h1 { text-align: center; margin-bottom: 30px; letter-spacing: 2px; font-weight: 600; }
-        body:not(.light-theme) h1 { text-shadow: 0 0 8px var(--accent-color); }
-        body.light-theme h1 { color: var(--accent-hover); }
+    .theme-toggle:hover {
+      background: var(--accent-color);
+      color: #ffffff;
+    }
 
-        .filters {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 30px;
-            padding: 25px;
-            border: 1px solid var(--card-border);
-            border-radius: 8px;
-            background: rgba(11, 12, 16, 0.5);
-            margin-bottom: 30px;
-        }
-        body.light-theme .filters { background: #f9f9f9; }
+    h1,
+    h2,
+    h3,
+    h4 {
+      color: var(--text-color);
+      margin-top: 0;
+    }
 
-        .filter-group { flex: 1; min-width: 250px; max-width: 400px; }
-        .filter-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: var(--accent-color);
-            font-size: 0.9em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        body:not(.light-theme) .filter-group label { text-shadow: 0 0 4px var(--accent-color); }
+    body:not(.light-theme) h1,
+    body:not(.light-theme) h2,
+    body:not(.light-theme) h3,
+    body:not(.light-theme) h4 {
+      color: #fff;
+    }
 
-        select, input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--card-border);
-            border-radius: 6px;
-            background-color: var(--input-bg);
-            color: var(--text-color);
-            font-size: 1em;
-            outline: none;
-            transition: all 0.3s;
-            box-sizing: border-box;
-        }
-        body:not(.light-theme) select, body:not(.light-theme) input[type="text"] {
-            color: #fff;
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
-        }
-        
-        select:focus, input[type="text"]:focus {
-            border-color: var(--accent-color);
-            box-shadow: 0 0 10px var(--accent-color);
-        }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      letter-spacing: 2px;
+      font-weight: 600;
+    }
 
-        button.primary-btn, .cancel-btn {
-            padding: 12px 24px;
-            background-color: transparent;
-            color: var(--accent-color);
-            border: 2px solid var(--accent-color);
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: 0.3s;
-        }
-        body:not(.light-theme) button.primary-btn, body:not(.light-theme) .cancel-btn {
-            box-shadow: 0 0 5px var(--accent-color) inset, 0 0 5px var(--accent-color);
-        }
+    body:not(.light-theme) h1 {
+      text-shadow: 0 0 8px var(--accent-color);
+    }
 
-        button.primary-btn:hover, .cancel-btn:hover {
-            background-color: var(--accent-color);
-            color: var(--bg-color);
-            transform: translateY(-2px);
-        }
-        body:not(.light-theme) button.primary-btn:hover, body:not(.light-theme) .cancel-btn:hover {
-            box-shadow: 0 0 15px var(--accent-color) inset, 0 0 15px var(--accent-color);
-        }
-        
-        button.primary-btn:active, .cancel-btn:active { transform: translateY(0); }
-        button.primary-btn:disabled, .cancel-btn:disabled { border-color: #555; color: #555; cursor: not-allowed; box-shadow: none; transform: none;}
+    body.light-theme h1 {
+      color: var(--accent-hover);
+    }
 
-        /* --- Tree / Accordion Styling --- */
-        .hierarchy-container { margin-top: 20px; }
+    .filters {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 30px;
+      padding: 25px;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: rgba(11, 12, 16, 0.5);
+      margin-bottom: 30px;
+    }
 
-        .bsc-section {
-            border: 1px solid var(--card-border);
-            border-radius: 8px;
-            margin-bottom: 15px;
-            background: rgba(11, 12, 16, 0.7);
-            overflow: hidden;
-            box-shadow: 0 0 8px rgba(176, 38, 255, 0.2);
-        }
-        body.light-theme .bsc-section { background: #fff; box-shadow: var(--neon-shadow); }
+    body.light-theme .filters {
+      background: #f9f9f9;
+    }
 
-        .accordion-header {
-            padding: 16px 20px;
-            background: var(--card-bg);
-            cursor: pointer;
-            user-select: none;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background 0.2s;
-            margin: 0;
-            font-size: 1.1em;
-            border-bottom: 1px solid transparent;
-            color: var(--text-color);
-        }
+    .filter-group {
+      flex: 1;
+      min-width: 250px;
+      max-width: 400px;
+    }
 
-        .accordion-header:hover { opacity: 0.9; }
-        .accordion-header::after {
-            content: '▼';
-            font-size: 0.8em;
-            transition: transform 0.3s;
-            color: var(--accent-color);
-        }
-        body:not(.light-theme) .accordion-header::after { text-shadow: 0 0 5px var(--accent-color); }
-        
-        .accordion-header.active { border-bottom: 1px solid var(--card-border); }
-        .accordion-header.active::after { transform: rotate(180deg); }
+    .filter-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--accent-color);
+      font-size: 0.9em;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
 
-        .accordion-content {
-            display: none;
-            padding: 15px 20px;
-            background: var(--bg-color);
-        }
-        .accordion-header.active + .accordion-content { display: block; }
+    body:not(.light-theme) .filter-group label {
+      text-shadow: 0 0 4px var(--accent-color);
+    }
 
-        .kra-section {
-            margin-bottom: 12px;
-            border: 1px solid var(--card-border);
-            border-radius: 6px;
-            overflow: hidden;
-        }
+    select,
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      background-color: var(--input-bg);
+      color: var(--text-color);
+      font-size: 1em;
+      outline: none;
+      transition: all 0.3s;
+      box-sizing: border-box;
+    }
 
-        .kra-header {
-            padding: 12px 15px;
-            background: rgba(0,0,0,0.5);
-            font-size: 1em;
-            border: none;
-            font-weight: 500;
-        }
-        body.light-theme .kra-header { background: #f4f5f7; }
+    body:not(.light-theme) select,
+    body:not(.light-theme) input[type="text"] {
+      color: #fff;
+      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+    }
 
-        .kra-content {
-            padding: 10px 15px;
-            background: rgba(0,0,0,0.3);
-            display: none;
-        }
-        body.light-theme .kra-content { background: #fafafa; }
-        .kra-header.active + .kra-content { display: block; }
+    select:focus,
+    input[type="text"]:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 10px var(--accent-color);
+    }
 
-        .kpi-label {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 10px;
-            padding: 10px;
-            background: var(--card-bg);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid var(--card-border);
-            color: var(--text-color);
-        }
-        
-        .kpi-label:hover { border-color: var(--accent-color); box-shadow: 0 0 8px rgba(176, 38, 255, 0.4);}
-        body.light-theme .kpi-label:hover { box-shadow: 0 0 6px rgba(138, 43, 226, 0.3); }
+    button.primary-btn,
+    .cancel-btn {
+      padding: 12px 24px;
+      background-color: transparent;
+      color: var(--accent-color);
+      border: 2px solid var(--accent-color);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1em;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: 0.3s;
+    }
 
-        .kpi-label input[type="checkbox"] {
-            margin-top: 4px;
-            margin-right: 15px;
-            accent-color: var(--accent-color);
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
+    body:not(.light-theme) button.primary-btn,
+    body:not(.light-theme) .cancel-btn {
+      box-shadow: 0 0 5px var(--accent-color) inset, 0 0 5px var(--accent-color);
+    }
 
-        /* Validation UI */
-        .kra-validation, .bsc-validation {
-            font-size: 0.85em;
-            margin-left: 15px;
-            padding: 3px 8px;
-            border-radius: 4px;
-            display: inline-block;
-            font-weight: 600;
-        }
-        .kra-validation.error, .bsc-validation.error { 
-            color: #fff; background-color: var(--error-color); 
-            box-shadow: 0 0 10px var(--error-color); border: 1px solid #fff;
-        }
-        .kra-validation.success, .bsc-validation.success { 
-            color: #000; background-color: var(--success-color); 
-            box-shadow: 0 0 10px var(--success-color); border: none;
-        }
+    button.primary-btn:hover,
+    .cancel-btn:hover {
+      background-color: var(--accent-color);
+      color: var(--bg-color);
+      transform: translateY(-2px);
+    }
 
-        /* Status messages */
-        .status-message {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 6px;
-            display: none;
-            font-weight: bold;
-            text-align: center;
-        }
-        .status-success { background-color: rgba(57, 255, 20, 0.1); color: var(--success-color); border: 1px solid var(--success-color); box-shadow: 0 0 10px var(--success-color);}
-        .status-error { background-color: rgba(255, 0, 127, 0.1); color: var(--error-color); border: 1px solid var(--error-color); box-shadow: 0 0 10px var(--error-color);}
-        .status-info { background-color: rgba(176, 38, 255, 0.1); color: var(--accent-color); border: 1px solid var(--accent-color); box-shadow: 0 0 10px var(--accent-color);}
+    body:not(.light-theme) button.primary-btn:hover,
+    body:not(.light-theme) .cancel-btn:hover {
+      box-shadow: 0 0 15px var(--accent-color) inset, 0 0 15px var(--accent-color);
+    }
 
-        /* Modal styling */
-        .modal {
-            display: none;
-            position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(4px);
-            justify-content: center; align-items: center;
-        }
-        body.light-theme .modal { background-color: rgba(255, 255, 255, 0.8); }
+    button.primary-btn:active,
+    .cancel-btn:active {
+      transform: translateY(0);
+    }
 
-        .modal-content {
-            background-color: var(--card-bg);
-            padding: 35px;
-            border: 1px solid var(--accent-color);
-            width: 90%; max-width: 650px;
-            border-radius: 12px;
-            box-shadow: var(--neon-shadow);
-            position: relative;
-        }
-        .close-button {
-            color: #666;
-            position: absolute; right: 25px; top: 20px;
-            font-size: 28px; font-weight: bold; cursor: pointer;
-            transition: color 0.2s;
-        }
-        .close-button:hover { color: var(--error-color); }
-        body:not(.light-theme) .close-button:hover { text-shadow: 0 0 10px var(--error-color); }
+    button.primary-btn:disabled,
+    .cancel-btn:disabled {
+      border-color: #555;
+      color: #555;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
 
-        .modal-footer { margin-top: 30px; text-align: right; display: flex; gap: 12px; justify-content: flex-end;}
-        
-        #jdOutput {
-            white-space: pre-wrap;
-            font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-            background-color: var(--input-bg);
-            border: 1px solid var(--success-color);
-            color: var(--success-color);
-            padding: 20px;
-            border-radius: 8px;
-            max-height: 400px;
-            overflow-y: auto;
-            margin-top: 15px;
-            font-size: 0.9em;
-            line-height: 1.5;
-        }
-        body:not(.light-theme) #jdOutput { 
-            text-shadow: 0 0 2px var(--success-color);
-            box-shadow: inset 0 0 10px rgba(57, 255, 20, 0.2); 
-            background-color: #0a0a0a;
-        }
+    /* --- Tree / Accordion Styling --- */
+    .hierarchy-container {
+      margin-top: 20px;
+    }
 
-        .script-info {
-            background: rgba(176, 38, 255, 0.1);
-            padding: 15px; 
-            border-left: 4px solid var(--accent-color);
-            margin-bottom: 25px; 
-            font-size: 0.9em; 
-            border-radius: 0 6px 6px 0;
-            color: var(--text-color);
-        }
-        body:not(.light-theme) .script-info { box-shadow: inset 0 0 10px rgba(176, 38, 255, 0.2); }
+    .bsc-section {
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      margin-bottom: 15px;
+      background: rgba(11, 12, 16, 0.7);
+      overflow: hidden;
+      box-shadow: 0 0 8px rgba(176, 38, 255, 0.2);
+    }
 
-        .center-btn { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--card-border); }
-        .no-data { text-align: center; color: var(--accent-color); font-style: italic; padding: 40px; }
-        body:not(.light-theme) .no-data { text-shadow: 0 0 5px var(--accent-color); }
-    </style>
+    body.light-theme .bsc-section {
+      background: #fff;
+      box-shadow: var(--neon-shadow);
+    }
+
+   
+    }
+
+    .accordion-header:hover {
+      opacity: 0.9;
+    }
+
+    .accordion-header::after {
+      content: '▼';
+      font-size: 0.8em;
+      transition: transform 0.3s;
+      color: var(--accent-color);
+    }
+
+    body:not(.light-theme) .accordion-header::after {
+      text-shadow: 0 0 5px var(--accent-color);
+    }
+
+    .accordion-header.active {
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .accordion-header.active::after {
+      transform: rotate(180deg);
+    }
+
+    .accordion-content {
+      display: none;
+      padding: 15px 20px;
+      background: var(--bg-color);
+    }
+
+    .accordion-header.active+.accordion-content {
+      display: block;
+    }
+
+    .kra-section {
+      margin-bottom: 12px;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .kra-header {
+      padding: 12px 15px;
+      body{background:linear-gradient(135deg, #a0c4ff, #bde0fe, #caffbf, #90f9ff, #81c4d0);
+background-size:400% 400%;animation:gradientShift 12s ease infinite;}
+      font-weight: 500;
+    }
+
+    body.light-theme .kra-header {
+      background: #f4f5f7;
+    }
+
+    .kra-content {
+      padding: 10px 15px;
+      background: rgba(0, 0, 0, 0.3);
+      display: none;
+    }
+
+    body.light-theme .kra-content {
+      background: #fafafa;
+    }
+
+    .kra-header.active+.kra-content {
+      display: block;
+    }
+
+    .kpi-label {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 10px;
+      padding: 10px;
+      background: var(--card-bg);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid var(--card-border);
+      color: var(--text-color);
+    }
+
+    .kpi-label:hover {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 8px rgba(176, 38, 255, 0.4);
+    }
+
+    body.light-theme .kpi-label:hover {
+      box-shadow: 0 0 6px rgba(138, 43, 226, 0.3);
+    }
+
+    .kpi-label input[type="checkbox"] {
+      margin-top: 4px;
+      margin-right: 15px;
+      accent-color: var(--accent-color);
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    /* Validation UI */
+    .kra-validation,
+    .bsc-validation {
+      font-size: 0.85em;
+      margin-left: 15px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      font-weight: 600;
+    }
+
+    .kra-validation.error,
+    .bsc-validation.error {
+      color: #fff;
+      background-color: var(--error-color);
+      box-shadow: 0 0 10px var(--error-color);
+      border: 1px solid #fff;
+    }
+
+    .kra-validation.success,
+    .bsc-validation.success {
+      color: #000;
+      background-color: var(--success-color);
+      box-shadow: 0 0 10px var(--success-color);
+      border: none;
+    }
+
+    /* Status messages */
+    .status-message {
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 6px;
+      display: none;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .status-success {
+      background-color: rgba(57, 255, 20, 0.1);
+      color: var(--success-color);
+      border: 1px solid var(--success-color);
+      box-shadow: 0 0 10px var(--success-color);
+    }
+
+    .status-error {
+      background-color: rgba(255, 0, 127, 0.1);
+      color: var(--error-color);
+      border: 1px solid var(--error-color);
+      box-shadow: 0 0 10px var(--error-color);
+    }
+
+    .status-info {
+      background-color: rgba(176, 38, 255, 0.1);
+      color: var(--accent-color);
+      border: 1px solid var(--accent-color);
+      box-shadow: 0 0 10px var(--accent-color);
+    }
+
+    /* Modal styling */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(4px);
+      justify-content: center;
+      align-items: center;
+    }
+
+    body.light-theme .modal {
+      background-color: rgba(255, 255, 255, 0.8);
+    }
+
+    .modal-content {
+      background-color: var(--card-bg);
+      padding: 35px;
+      border: 1px solid var(--accent-color);
+      width: 90%;
+      max-width: 650px;
+      border-radius: 12px;
+      box-shadow: var(--neon-shadow);
+      position: relative;
+    }
+
+    .close-button {
+      color: #666;
+      position: absolute;
+      right: 25px;
+      top: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .close-button:hover {
+      color: var(--error-color);
+    }
+
+    body:not(.light-theme) .close-button:hover {
+      text-shadow: 0 0 10px var(--error-color);
+    }
+
+    .modal-footer {
+      margin-top: 30px;
+      text-align: right;
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    #jdOutput {
+      white-space: pre-wrap;
+      font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+      background-color: var(--input-bg);
+      border: 1px solid var(--success-color);
+      color: var(--success-color);
+      padding: 20px;
+      border-radius: 8px;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-top: 15px;
+      font-size: 0.9em;
+      line-height: 1.5;
+    }
+
+    body:not(.light-theme) #jdOutput {
+      text-shadow: 0 0 2px var(--success-color);
+      box-shadow: inset 0 0 10px rgba(57, 255, 20, 0.2);
+      background-color: #0a0a0a;
+    }
+
+    .script-info {
+      background: rgba(176, 38, 255, 0.1);
+      padding: 15px;
+      border-left: 4px solid var(--accent-color);
+      margin-bottom: 25px;
+      font-size: 0.9em;
+      border-radius: 0 6px 6px 0;
+      color: var(--text-color);
+    }
+
+    body:not(.light-theme) .script-info {
+      box-shadow: inset 0 0 10px rgba(176, 38, 255, 0.2);
+    }
+
+    .center-btn {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--card-border);
+    }
+
+    .no-data {
+      text-align: center;
+      color: var(--accent-color);
+      font-style: italic;
+      padding: 40px;
+    }
+
+    body:not(.light-theme) .no-data {
+      text-shadow: 0 0 5px var(--accent-color);
+    }
+  </style>
 </head>
+
 <body>
 
-    <div class="container">
-        <button class="theme-toggle" onclick="toggleTheme()">Toggle Light/Dark</button>
-        <h1>KRA / KPI Directory</h1>
+  <div class="container">
+    <button class="theme-toggle" onclick="toggleTheme()">Toggle Light/Dark</button>
+    <h1>KRA / KPI Directory</h1>
 
-        <div id="statusMessage" class="status-message status-info"></div>
+    <div id="statusMessage" class="status-message status-info"></div>
 
-        <div class="filters">
-            <div class="filter-group">
-                <label for="managementLevel">Management Level</label>
-                <select id="managementLevel" onchange="updateDashboard()">
-                    <option value="">All Levels</option>
-                </select>
-            </div>
+    <div class="filters">
+      <div class="filter-group">
+        <label for="managementLevel">Management Level</label>
+        <select id="managementLevel" onchange="updateDashboard()">
+          <option value="">All Levels</option>
+        </select>
+      </div>
 
-            <div class="filter-group">
-                <label for="department">Department</label>
-                <select id="department" onchange="updateDashboard()">
-                    <option value="">All Departments</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="hierarchy-section">
-            <h2 style="color: var(--accent-color);">Select Key Performance Indicators (KPI)</h2>
-            <p style="color: #888; font-size: 0.9em;">Rule: You must select Every BSC Area by choosing at least 1 KRA in each. For any selected KRA, at least 2 KPIs must be checked.</p>
-            <div id="hierarchyContainer" class="hierarchy-container">
-                <div class="no-data">System Initializing Data...</div>
-            </div>
-        </div>
-
-        <div class="center-btn">
-            <button id="generateBtn" class="primary-btn" onclick="showJdForm()">Generate</button>
-        </div>
+      <div class="filter-group">
+        <label for="department">Department</label>
+        <select id="department" onchange="updateDashboard()">
+          <option value="">All Departments</option>
+        </select>
+      </div>
     </div>
 
-    <!-- JD Input Modal -->
-    <div id="jdModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="hideJdForm()">&times;</span>
-            
-            <div id="jdInputSection">
-                <h2 style="margin-bottom: 20px; color: var(--accent-color);">Employee Details</h2>
-                
-
-
-                <div style="margin-bottom: 15px;">
-                    <label for="employeeName" style="display:block; margin-bottom: 5px; color: var(--accent-color);">Employee Name</label>
-                    <input type="text" id="employeeName" placeholder="Enter Full Name">
-                </div>
-                
-                <div style="margin-bottom: 25px;">
-                    <label for="employeeId" style="display:block; margin-bottom: 5px; color: var(--accent-color);">Employee ID</label>
-                    <input type="text" id="employeeId" placeholder="Enter Employee ID">
-                </div>
-                
-                <div class="modal-footer">
-                    <button onclick="hideJdForm()" class="cancel-btn">Cancel</button>
-                    <button id="btnGenerateReport" class="primary-btn" onclick="displayJdText()">Generate Report</button>
-                </div>
-            </div>
-            
-            <div id="jdDisplaySection" style="display:none;">
-                <h2 style="color: var(--success-color);">Generated Output</h2>
-                <pre id="jdOutput"></pre>
-                
-                <div class="modal-footer">
-                    <button onclick="resetJdForm()" class="cancel-btn">Back</button>
-                    <button id="btnCopyData" class="primary-btn" onclick="copyJdToClipboard()">Copy & Transmit to Sheet</button>
-                </div>
-            </div>
-        </div>
+    <div class="hierarchy-section">
+      <h2 style="color: var(--accent-color);">Select Key Performance Indicators (KPI)</h2>
+      <p style="color: #888; font-size: 0.9em;">Rule: You must select Every BSC Area by choosing at least 1 KRA in each.
+        For any selected KRA, at least 2 KPIs must be checked.</p>
+      <div id="hierarchyContainer" class="hierarchy-container">
+        <div class="no-data">System Initializing Data...</div>
+      </div>
     </div>
 
-    <script>
-        // CONFIGURATION: Base64 Encoded Web App URL
-        const ENCODED_WEB_APP_URL = 'aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J3dmZKMnFhTG1SQkRpSWM3d0o1TF9oNDEzZ3BUd05mUjIzbWpzMU01NUpWampWeGNoLVBiV1B2NE9pWi13QU1GaV8vZXhlYw=='; 
-        const WEB_APP_URL = atob(ENCODED_WEB_APP_URL);
+    <div class="center-btn">
+      <button id="generateBtn" class="primary-btn" onclick="showJdForm()">Generate</button>
+    </div>
+  </div>
 
-        let allKpiData = [];
-        let currentJdText = '';
-        
-        // Decode default URL safely
-        const ENCODED_GOOGLE_SHEET_URL = 'aHR0cHM6Ly9kb2NzLmdvb2dsZS5jb20vc3ByZWFkc2hlZXRzL2QvMWhRWDFOTVNfZGhNQlg4OGtwMG93MG50WEwxU2h4LUh4aWU1N2JSX195aGMvZWRpdD91c3A9c2hhcmluZw==';
-        const DEFAULT_GOOGLE_SHEET_URL = atob(ENCODED_GOOGLE_SHEET_URL);
+  <!-- JD Input Modal -->
+  <div id="jdModal" class="modal">
+    <div class="modal-content">
+      <span class="close-button" onclick="hideJdForm()">&times;</span>
 
-        function toggleTheme() {
-            document.body.classList.toggle('light-theme');
+      <div id="jdInputSection">
+        <h2 style="margin-bottom: 20px; color: var(--accent-color);">Employee Details</h2>
+
+
+
+        <div style="margin-bottom: 15px;">
+          <label for="employeeName" style="display:block; margin-bottom: 5px; color: var(--accent-color);">Employee
+            Name</label>
+          <input type="text" id="employeeName" placeholder="Enter Full Name">
+        </div>
+
+        <div style="margin-bottom: 25px;">
+          <label for="employeeId" style="display:block; margin-bottom: 5px; color: var(--accent-color);">Employee
+            ID</label>
+          <input type="text" id="employeeId" placeholder="Enter Employee ID">
+        </div>
+
+        <div class="modal-footer">
+          <button onclick="hideJdForm()" class="cancel-btn">Cancel</button>
+          <button id="btnGenerateReport" class="primary-btn" onclick="displayJdText()">Generate Report</button>
+        </div>
+      </div>
+
+      <div id="jdDisplaySection" style="display:none;">
+        <h2 style="color: var(--success-color);">Generated Output</h2>
+        <pre id="jdOutput"></pre>
+
+        <div class="modal-footer">
+          <button onclick="resetJdForm()" class="cancel-btn">Back</button>
+          <button id="btnCopyData" class="primary-btn" onclick="copyJdToClipboard()">Copy & Transmit to Sheet</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // CONFIGURATION: Base64 Encoded Web App URL
+    const ENCODED_WEB_APP_URL = 'aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J3dmZKMnFhTG1SQkRpSWM3d0o1TF9oNDEzZ3BUd05mUjIzbWpzMU01NUpWampWeGNoLVBiV1B2NE9pWi13QU1GaV8vZXhlYw==';
+    const WEB_APP_URL = atob(ENCODED_WEB_APP_URL);
+
+    let allKpiData = [];
+    let currentJdText = '';
+
+    // Decode default URL safely
+    const ENCODED_GOOGLE_SHEET_URL = ENCODED_WEB_APP_URL; // Use web app URL for private sheet access
+    const DEFAULT_GOOGLE_SHEET_URL = atob(ENCODED_GOOGLE_SHEET_URL);
+
+    function toggleTheme() {
+      document.body.classList.toggle('light-theme');
+    }
+
+    function showStatus(message, type) {
+      const statusDiv = document.getElementById('statusMessage');
+      statusDiv.textContent = message;
+      statusDiv.className = `status-message status-${type}`;
+      statusDiv.style.display = 'block';
+    }
+
+    function hideStatus() {
+      document.getElementById('statusMessage').style.display = 'none';
+    }
+
+    function populateDropdown(selectId, dataColumn, data) {
+      const selectElement = document.getElementById(selectId);
+      const currentValue = selectElement.value;
+      selectElement.innerHTML = `<option value="">All ${selectId.replace(/([A-Z])/g, ' $1').trim()}s</option>`;
+
+      const uniqueValues = [...new Set(data.map(item => item[dataColumn]))]
+        .filter(val => val && val.trim() !== '')
+        .sort();
+
+      uniqueValues.forEach(value => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        selectElement.appendChild(option);
+      });
+
+      if ([...uniqueValues, ''].includes(currentValue)) {
+        selectElement.value = currentValue;
+      }
+    }
+
+    function validateKpiSelections() {
+      let allValid = true;
+
+      // Validate KRA section level
+      document.querySelectorAll('.kra-section').forEach(section => {
+        const safeId = section.dataset.kraid;
+        const valSpan = document.getElementById(`valid-${safeId}`);
+        if (!valSpan) return;
+
+        const checkboxes = section.querySelectorAll('input[type="checkbox"]');
+        const checkedCount = section.querySelectorAll('input[type="checkbox"]:checked').length;
+        const totalCount = checkboxes.length;
+        const required = Math.min(2, totalCount);
+
+        if (checkedCount > 0 && checkedCount < required) {
+          valSpan.style.display = 'inline';
+          valSpan.textContent = `Required: ${required} KPIs (Found ${checkedCount})`;
+          valSpan.className = 'kra-validation error';
+          section.dataset.selected = "true";
+          allValid = false;
+        } else if (checkedCount >= required) {
+          valSpan.style.display = 'inline';
+          valSpan.textContent = `Valid (${checkedCount} selected)`;
+          valSpan.className = 'kra-validation success';
+          section.dataset.selected = "true";
+        } else {
+          valSpan.style.display = 'none';
+          section.dataset.selected = "false";
+        }
+      });
+
+      // Validate BSC section level
+      document.querySelectorAll('.bsc-section').forEach((bscSection) => {
+        const header = bscSection.querySelector('.bsc-header');
+        let bscMsg = bscSection.querySelector('.bsc-validation');
+        if (!bscMsg) {
+          bscMsg = document.createElement('span');
+          bscMsg.className = 'bsc-validation';
+          header.appendChild(bscMsg);
         }
 
-        function showStatus(message, type) {
-            const statusDiv = document.getElementById('statusMessage');
-            statusDiv.textContent = message;
-            statusDiv.className = `status-message status-${type}`;
-            statusDiv.style.display = 'block';
-        }
+        const selectedKras = Array.from(bscSection.querySelectorAll('.kra-section')).filter(kra => kra.dataset.selected === "true").length;
 
-        function hideStatus() {
-            document.getElementById('statusMessage').style.display = 'none';
+        if (selectedKras < 1) {
+          bscMsg.textContent = "Required: Select at least 1 KRA";
+          bscMsg.className = 'bsc-validation error';
+          bscMsg.style.display = 'inline-block';
+          allValid = false;
+        } else {
+          bscMsg.textContent = "Valid";
+          bscMsg.className = 'bsc-validation success';
+          bscMsg.style.display = 'inline-block';
         }
+      });
 
-        function populateDropdown(selectId, dataColumn, data) {
-            const selectElement = document.getElementById(selectId);
-            const currentValue = selectElement.value;
-            selectElement.innerHTML = `<option value="">All ${selectId.replace(/([A-Z])/g, ' $1').trim()}s</option>`;
-            
-            const uniqueValues = [...new Set(data.map(item => item[dataColumn]))]
-                .filter(val => val && val.trim() !== '')
-                .sort();
-                
-            uniqueValues.forEach(value => {
-                const option = document.createElement('option');
-                option.value = value;
-                option.textContent = value;
-                selectElement.appendChild(option);
+      return allValid;
+    }
+
+    function updateDashboard() {
+      const managementLevel = document.getElementById('managementLevel').value;
+      const department = document.getElementById('department').value;
+      const container = document.getElementById('hierarchyContainer');
+
+      const checkedKpis = Array.from(document.querySelectorAll('.kpi-label input[type="checkbox"]:checked')).map(cb => cb.value);
+
+      const filteredData = allKpiData.filter(item => {
+        const levelMatch = managementLevel === '' || item['Management_Level'] === managementLevel;
+        const deptMatch = department === '' || item['Department'] === department;
+        return levelMatch && deptMatch;
+      });
+
+      if (filteredData.length === 0) {
+        container.innerHTML = '<div class="no-data">No data found in system arrays.</div>';
+        return;
+      }
+
+      container.innerHTML = '';
+
+      const bscMap = new Map();
+      filteredData.forEach(item => {
+        const bsc = item['BSC_Area_Focus'] || 'Unspecified BSC Area';
+        if (!bscMap.has(bsc)) bscMap.set(bsc, []);
+        bscMap.get(bsc).push(item);
+      });
+
+      const sortedBsc = Array.from(bscMap.keys()).sort();
+
+      sortedBsc.forEach((bscName, index) => {
+        const bscSection = document.createElement('div');
+        bscSection.className = 'bsc-section';
+
+        const bscHeader = document.createElement('h3');
+        bscHeader.className = 'bsc-header accordion-header';
+        bscHeader.innerHTML = `<span>${bscName}</span>`;
+        bscHeader.onclick = (e) => {
+          // Prevent toggling if user clicks the validation badge
+          if (!e.target.classList.contains('bsc-validation')) {
+            bscHeader.classList.toggle('active');
+          }
+        };
+
+        if (index === 0) bscHeader.classList.add('active');
+
+        const bscContent = document.createElement('div');
+        bscContent.className = 'bsc-content accordion-content';
+
+        const bscItems = bscMap.get(bscName);
+        const kraMap = new Map();
+        bscItems.forEach(item => {
+          const kra = item['KRA'] || 'Unspecified KRA';
+          if (!kraMap.has(kra)) kraMap.set(kra, []);
+          kraMap.get(kra).push(item);
+        });
+
+        const sortedKra = Array.from(kraMap.keys()).sort();
+
+        sortedKra.forEach(kraName => {
+          const kraItems = kraMap.get(kraName);
+
+          const kraSection = document.createElement('div');
+          kraSection.className = 'kra-section';
+          const safeId = kraName.replace(/[^a-zA-Z0-9]/g, '') + Math.floor(Math.random() * 1000);
+          kraSection.dataset.kraid = safeId;
+          kraSection.dataset.selected = "false";
+
+          const kraHeader = document.createElement('div');
+          kraHeader.className = 'kra-header accordion-header';
+          kraHeader.innerHTML = `<span>${kraName}</span> <span class="kra-validation" id="valid-${safeId}" style="display:none;"></span>`;
+          kraHeader.onclick = () => kraHeader.classList.toggle('active');
+
+          const kraContent = document.createElement('div');
+          kraContent.className = 'kra-content accordion-content';
+
+          const kpiSet = new Set();
+          kraItems.forEach(item => {
+            ['KPI 1', 'KPI 2', 'KPI 3', 'KPI 4', 'KPI 5'].forEach(col => {
+              if (item[col] && item[col].trim() !== '') {
+                kpiSet.add(item[col].trim());
+              }
             });
-            
-            if ([...uniqueValues, ''].includes(currentValue)) {
-                selectElement.value = currentValue;
-            }
-        }
+          });
 
-        function validateKpiSelections() {
-            let allValid = true;
-            
-            // Validate KRA section level
-            document.querySelectorAll('.kra-section').forEach(section => {
-                const safeId = section.dataset.kraid;
-                const valSpan = document.getElementById(`valid-${safeId}`);
-                if (!valSpan) return;
-                
-                const checkboxes = section.querySelectorAll('input[type="checkbox"]');
-                const checkedCount = section.querySelectorAll('input[type="checkbox"]:checked').length;
-                const totalCount = checkboxes.length;
-                const required = Math.min(2, totalCount);
+          if (kpiSet.size === 0) {
+            kraContent.innerHTML = '<div style="color:#777; padding:5px;">No parameters linked to this block.</div>';
+          } else {
+            Array.from(kpiSet).sort().forEach(kpi => {
+              const kpiLabel = document.createElement('label');
+              kpiLabel.className = 'kpi-label';
 
-                if (checkedCount > 0 && checkedCount < required) {
-                    valSpan.style.display = 'inline';
-                    valSpan.textContent = `Required: ${required} KPIs (Found ${checkedCount})`;
-                    valSpan.className = 'kra-validation error';
-                    section.dataset.selected = "true";
-                    allValid = false;
-                } else if (checkedCount >= required) {
-                    valSpan.style.display = 'inline';
-                    valSpan.textContent = `Valid (${checkedCount} selected)`;
-                    valSpan.className = 'kra-validation success';
-                    section.dataset.selected = "true";
-                } else {
-                    valSpan.style.display = 'none';
-                    section.dataset.selected = "false";
-                }
+              const checkbox = document.createElement('input');
+              checkbox.type = 'checkbox';
+              checkbox.value = kpi;
+              checkbox.dataset.kra = kraName;
+              checkbox.dataset.bsc = bscName;
+              if (checkedKpis.includes(kpi)) {
+                checkbox.checked = true;
+                bscHeader.classList.add('active');
+                kraHeader.classList.add('active');
+              }
+
+              checkbox.onchange = validateKpiSelections;
+
+              kpiLabel.appendChild(checkbox);
+              kpiLabel.appendChild(document.createTextNode(kpi));
+              kraContent.appendChild(kpiLabel);
             });
+          }
 
-            // Validate BSC section level
-            document.querySelectorAll('.bsc-section').forEach((bscSection) => {
-                const header = bscSection.querySelector('.bsc-header');
-                let bscMsg = bscSection.querySelector('.bsc-validation');
-                if (!bscMsg) {
-                    bscMsg = document.createElement('span');
-                    bscMsg.className = 'bsc-validation';
-                    header.appendChild(bscMsg);
-                }
+          kraSection.appendChild(kraHeader);
+          kraSection.appendChild(kraContent);
+          bscContent.appendChild(kraSection);
+        });
 
-                const selectedKras = Array.from(bscSection.querySelectorAll('.kra-section')).filter(kra => kra.dataset.selected === "true").length;
-                
-                if (selectedKras < 1) {
-                    bscMsg.textContent = "Required: Select at least 1 KRA";
-                    bscMsg.className = 'bsc-validation error';
-                    bscMsg.style.display = 'inline-block';
-                    allValid = false;
-                } else {
-                    bscMsg.textContent = "Valid";
-                    bscMsg.className = 'bsc-validation success';
-                    bscMsg.style.display = 'inline-block';
-                }
-            });
-            
-            return allValid;
+        bscSection.appendChild(bscHeader);
+        bscSection.appendChild(bscContent);
+        container.appendChild(bscSection);
+      });
+
+      validateKpiSelections();
+    }
+
+    async function loadFromGoogleSheet() {
+      showStatus('Initializing system modules...', 'info');
+
+      try {
+        let csvExportUrl = WEB_APP_URL + '?export=csv'; // Direct CSV endpoint from Apps Script
+
+        const cachedData = localStorage.getItem('kpiDataCache');
+        if (cachedData) {
+          try {
+            allKpiData = JSON.parse(cachedData);
+            hideStatus();
+            populateDropdown('managementLevel', 'Management_Level', allKpiData);
+            populateDropdown('department', 'Department', allKpiData);
+            updateDashboard();
+          } catch (e) { console.error("Cache parsing error"); }
+        } else {
+          showStatus('Connecting to datadump (This will only take a few seconds on your first visit!)...', 'info');
         }
 
-        function updateDashboard() {
-            const managementLevel = document.getElementById('managementLevel').value;
-            const department = document.getElementById('department').value;
-            const container = document.getElementById('hierarchyContainer');
+        const response = await fetch(csvExportUrl);
+        if (!response.ok) throw new Error(`Network block! Layer: ${response.status}`);
 
-            const checkedKpis = Array.from(document.querySelectorAll('.kpi-label input[type="checkbox"]:checked')).map(cb => cb.value);
+        const csvData = await response.text();
+        const freshData = parseCsvToObject(csvData);
 
-            const filteredData = allKpiData.filter(item => {
-                const levelMatch = managementLevel === '' || item['Management_Level'] === managementLevel;
-                const deptMatch = department === '' || item['Department'] === department;
-                return levelMatch && deptMatch;
-            });
-
-            if (filteredData.length === 0) {
-                container.innerHTML = '<div class="no-data">No data found in system arrays.</div>';
-                return;
-            }
-
-            container.innerHTML = '';
-
-            const bscMap = new Map();
-            filteredData.forEach(item => {
-                const bsc = item['BSC_Area_Focus'] || 'Unspecified BSC Area';
-                if (!bscMap.has(bsc)) bscMap.set(bsc, []);
-                bscMap.get(bsc).push(item);
-            });
-
-            const sortedBsc = Array.from(bscMap.keys()).sort();
-            
-            sortedBsc.forEach((bscName, index) => {
-                const bscSection = document.createElement('div');
-                bscSection.className = 'bsc-section';
-                
-                const bscHeader = document.createElement('h3');
-                bscHeader.className = 'bsc-header accordion-header';
-                bscHeader.innerHTML = `<span>${bscName}</span>`;
-                bscHeader.onclick = (e) => {
-                    // Prevent toggling if user clicks the validation badge
-                    if(!e.target.classList.contains('bsc-validation')){
-                        bscHeader.classList.toggle('active');
-                    }
-                };
-                
-                if(index === 0) bscHeader.classList.add('active');
-
-                const bscContent = document.createElement('div');
-                bscContent.className = 'bsc-content accordion-content';
-
-                const bscItems = bscMap.get(bscName);
-                const kraMap = new Map();
-                bscItems.forEach(item => {
-                    const kra = item['KRA'] || 'Unspecified KRA';
-                    if (!kraMap.has(kra)) kraMap.set(kra, []);
-                    kraMap.get(kra).push(item);
-                });
-
-                const sortedKra = Array.from(kraMap.keys()).sort();
-                
-                sortedKra.forEach(kraName => {
-                    const kraItems = kraMap.get(kraName);
-                    
-                    const kraSection = document.createElement('div');
-                    kraSection.className = 'kra-section';
-                    const safeId = kraName.replace(/[^a-zA-Z0-9]/g, '') + Math.floor(Math.random()*1000);
-                    kraSection.dataset.kraid = safeId;
-                    kraSection.dataset.selected = "false";
-                    
-                    const kraHeader = document.createElement('div');
-                    kraHeader.className = 'kra-header accordion-header';
-                    kraHeader.innerHTML = `<span>${kraName}</span> <span class="kra-validation" id="valid-${safeId}" style="display:none;"></span>`;
-                    kraHeader.onclick = () => kraHeader.classList.toggle('active');
-                    
-                    const kraContent = document.createElement('div');
-                    kraContent.className = 'kra-content accordion-content';
-                    
-                    const kpiSet = new Set();
-                    kraItems.forEach(item => {
-                        ['KPI 1', 'KPI 2', 'KPI 3', 'KPI 4', 'KPI 5'].forEach(col => {
-                            if(item[col] && item[col].trim() !== '') {
-                                kpiSet.add(item[col].trim());
-                            }
-                        });
-                    });
-                    
-                    if (kpiSet.size === 0) {
-                        kraContent.innerHTML = '<div style="color:#777; padding:5px;">No parameters linked to this block.</div>';
-                    } else {
-                        Array.from(kpiSet).sort().forEach(kpi => {
-                            const kpiLabel = document.createElement('label');
-                            kpiLabel.className = 'kpi-label';
-                            
-                            const checkbox = document.createElement('input');
-                            checkbox.type = 'checkbox';
-                            checkbox.value = kpi;
-                            checkbox.dataset.kra = kraName;
-                            checkbox.dataset.bsc = bscName;
-                            if (checkedKpis.includes(kpi)) {
-                                checkbox.checked = true;
-                                bscHeader.classList.add('active');
-                                kraHeader.classList.add('active');
-                            }
-                            
-                            checkbox.onchange = validateKpiSelections;
-                            
-                            kpiLabel.appendChild(checkbox);
-                            kpiLabel.appendChild(document.createTextNode(kpi));
-                            kraContent.appendChild(kpiLabel);
-                        });
-                    }
-                    
-                    kraSection.appendChild(kraHeader);
-                    kraSection.appendChild(kraContent);
-                    bscContent.appendChild(kraSection);
-                });
-                
-                bscSection.appendChild(bscHeader);
-                bscSection.appendChild(bscContent);
-                container.appendChild(bscSection);
-            });
-            
-            validateKpiSelections();
+        if (freshData.length > 0) {
+          allKpiData = freshData;
+          localStorage.setItem('kpiDataCache', JSON.stringify(allKpiData));
+          if (!cachedData) {
+            hideStatus();
+            populateDropdown('managementLevel', 'Management_Level', allKpiData);
+            populateDropdown('department', 'Department', allKpiData);
+            updateDashboard();
+          }
+        } else {
+          if (!cachedData) showStatus('Data array empty. Contact Admin.', 'error');
         }
-
-        async function loadFromGoogleSheet() {
-            showStatus('Initializing system modules...', 'info');
-            
-            try {
-                let csvExportUrl = DEFAULT_GOOGLE_SHEET_URL.replace('/edit#gid=', '/export?format=csv&gid=');
-                if (!csvExportUrl.includes('/export?format=csv')) {
-                    const match = DEFAULT_GOOGLE_SHEET_URL.match(/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
-                    if (match) {
-                        csvExportUrl = `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`;
-                        const gidMatch = DEFAULT_GOOGLE_SHEET_URL.match(/#gid=(\d+)/);
-                        if (gidMatch) {
-                            csvExportUrl += `&gid=${gidMatch[1]}`;
-                        }
-                    }
-                }
-
-                const cachedData = localStorage.getItem('kpiDataCache');
-                if (cachedData) {
-                    try {
-                        allKpiData = JSON.parse(cachedData);
-                        hideStatus();
-                        populateDropdown('managementLevel', 'Management_Level', allKpiData);
-                        populateDropdown('department', 'Department', allKpiData);
-                        updateDashboard();
-                    } catch(e) { console.error("Cache parsing error"); }
-                } else {
-                    showStatus('Connecting to datadump (This will only take a few seconds on your first visit!)...', 'info');
-                }
-
-                const response = await fetch(csvExportUrl);
-                if (!response.ok) throw new Error(`Network block! Layer: ${response.status}`);
-                
-                const csvData = await response.text();
-                const freshData = parseCsvToObject(csvData);
-                
-                if (freshData.length > 0) {
-                    allKpiData = freshData;
-                    localStorage.setItem('kpiDataCache', JSON.stringify(allKpiData));
-                    if (!cachedData) {
-                        hideStatus();
-                        populateDropdown('managementLevel', 'Management_Level', allKpiData);
-                        populateDropdown('department', 'Department', allKpiData);
-                        updateDashboard();
-                    }
-                } else {
-                    if (!cachedData) showStatus('Data array empty. Contact Admin.', 'error');
-                }
-            } catch (error) {
-                if (allKpiData.length === 0) {
-                    showStatus(`Connection Error: ${error.message}`, 'error');
-                } else {
-                    console.warn("Background fetch failed, returning cached memory bank.", error);
-                }
-            }
+      } catch (error) {
+        if (allKpiData.length === 0) {
+          showStatus(`Connection Error: ${error.message}`, 'error');
+        } else {
+          console.warn("Background fetch failed, returning cached memory bank.", error);
         }
+      }
+    }
 
-        function parseCsvToObject(csv) {
-            const lines = csv.split(/\r?\n/).filter(line => line.trim() !== '');
-            if (lines.length === 0) return [];
+    function parseCsvToObject(csv) {
+      const lines = csv.split(/\r?\n/).filter(line => line.trim() !== '');
+      if (lines.length === 0) return [];
 
-            const headers = lines[0].split(',').map(header => header.trim());
-            const data = [];
+      const headers = lines[0].split(',').map(header => header.trim());
+      const data = [];
 
-            for (let i = 1; i < lines.length; i++) {
-                const splitRegex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/; 
-                const cells = lines[i].split(splitRegex).map(cell => cell.replace(/^"|"$/g, '').trim());
-                
-                let rowObject = {};
-                for (let j = 0; j < headers.length; j++) {
-                    if (headers[j]) {
-                        rowObject[headers[j]] = cells[j] || '';
-                    }
-                }
-                data.push(rowObject);
-            }
-            return data;
+      for (let i = 1; i < lines.length; i++) {
+        const splitRegex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
+        const cells = lines[i].split(splitRegex).map(cell => cell.replace(/^"|"$/g, '').trim());
+
+        let rowObject = {};
+        for (let j = 0; j < headers.length; j++) {
+          if (headers[j]) {
+            rowObject[headers[j]] = cells[j] || '';
+          }
         }
+        data.push(rowObject);
+      }
+      return data;
+    }
 
-        function showJdForm() {
-            if (!validateKpiSelections()) {
-                alert("ACCESS DENIED: Please ensure Every BSC Area has at least 1 KRA selected, and every selected KRA has at least 2 KPIs checked.");
-                return;
-            }
-            
-            document.getElementById('jdInputSection').style.display = 'block';
-            document.getElementById('jdDisplaySection').style.display = 'none';
-            document.getElementById('jdModal').style.display = 'flex';
-        }
+    function showJdForm() {
+      if (!validateKpiSelections()) {
+        alert("ACCESS DENIED: Please ensure Every BSC Area has at least 1 KRA selected, and every selected KRA has at least 2 KPIs checked.");
+        return;
+      }
 
-        function hideJdForm() {
-            document.getElementById('jdModal').style.display = 'none';
-        }
+    // Show dashboard after splash (4s)
+  setTimeout(() => {
+    document.getElementById('welcome').style.display = 'none';
+    const dash = document.getElementById('dashboard');
+    dash.style.display = 'flex';
+    history.replaceState(null, '', '/');
+  }, 4000);.getElementById('jdModal').style.display = 'flex';
+    }
 
-        function resetJdForm() {
-            document.getElementById('jdInputSection').style.display = 'block';
-            document.getElementById('jdDisplaySection').style.display = 'none';
-            document.getElementById('jdOutput').textContent = '';
-            currentJdText = '';
-        }
+    function hideJdForm() {
+      document.getElementById('jdModal').style.display = 'none';
+    }
 
-        function displayJdText() {
-            const employeeName = document.getElementById('employeeName').value.trim();
-            const employeeId = document.getElementById('employeeId').value.trim();
-            const managementLevel = document.getElementById('managementLevel').value;
-            const department = document.getElementById('department').value;
+    function resetJdForm() {
+      document.getElementById('jdInputSection').style.display = 'block';
+      document.getElementById('jdDisplaySection').style.display = 'none';
+      document.getElementById('jdOutput').textContent = '';
+      currentJdText = '';
+    }
 
-            if (!employeeName || !employeeId) {
-                alert('Fill in employee details.');
-                return;
-            }
+    function displayJdText() {
+      const employeeName = document.getElementById('employeeName').value.trim();
+      const employeeId = document.getElementById('employeeId').value.trim();
+      const managementLevel = document.getElementById('managementLevel').value;
+      const department = document.getElementById('department').value;
 
-            let jdContent = `====================================================\n`;
-            jdContent += `        JOB DESCRIPTION - AVAADA ELECTRO LTD.       \n`;
-            jdContent += `        MIDC Butibori, Nagpur, Maharashtra          \n`;
-            jdContent += `====================================================\n\n`;
-            jdContent += `Generated On: ${new Date().toLocaleDateString()}\n\n`;
-            
-            jdContent += `[EMPLOYEE DETAILS]\n`;
-            jdContent += `Name:         ${employeeName}\n`;
-            jdContent += `Employee ID:  ${employeeId}\n\n`;
-            
-            jdContent += `[ROLE & PLACEMENT]\n`;
-            jdContent += `Management Level: ${managementLevel || 'ALL'}\n`;
-            jdContent += `Department:       ${department || 'ALL'}\n\n`;
-            
-            jdContent += `[AGREED PERFORMANCE EVALUATION FRAMEWORK]\n\n`;
+      if (!employeeName || !employeeId) {
+        alert('Fill in employee details.');
+        return;
+      }
 
-            const checkboxes = document.querySelectorAll('.kpi-label input[type="checkbox"]:checked');
-            const selectionTree = new Map();
+      let jdContent = `====================================================\n`;
+      jdContent += `        JOB DESCRIPTION - AVAADA ELECTRO LTD.       \n`;
+      jdContent += `        MIDC Butibori, Nagpur, Maharashtra          \n`;
+      jdContent += `====================================================\n\n`;
+      jdContent += `Generated On: ${new Date().toLocaleDateString()}\n\n`;
 
-            checkboxes.forEach(cb => {
-                const bsc = cb.dataset.bsc;
-                const kra = cb.dataset.kra;
-                const kpi = cb.value;
+      jdContent += `[EMPLOYEE DETAILS]\n`;
+      jdContent += `Name:         ${employeeName}\n`;
+      jdContent += `Employee ID:  ${employeeId}\n\n`;
 
-                if (!selectionTree.has(bsc)) selectionTree.set(bsc, new Map());
-                const kraMap = selectionTree.get(bsc);
-                
-                if (!kraMap.has(kra)) kraMap.set(kra, []);
-                kraMap.get(kra).push(kpi);
-            });
+      jdContent += `[ROLE & PLACEMENT]\n`;
+      jdContent += `Management Level: ${managementLevel || 'ALL'}\n`;
+      jdContent += `Department:       ${department || 'ALL'}\n\n`;
 
-            selectionTree.forEach((kraMap, bsc) => {
-                jdContent += `> BSC AREA: ${bsc.toUpperCase()}\n`;
-                kraMap.forEach((kpis, kra) => {
-                    jdContent += `  KRA: ${kra}\n`;
-                    kpis.forEach(kpi => {
-                        jdContent += `       - ${kpi}\n`;
-                    });
-                    jdContent += `\n`;
-                });
-            });
+      jdContent += `[AGREED PERFORMANCE EVALUATION FRAMEWORK]\n\n`;
 
-            currentJdText = jdContent;
-            document.getElementById('jdOutput').textContent = jdContent;
-            document.getElementById('jdInputSection').style.display = 'none';
-            document.getElementById('jdDisplaySection').style.display = 'block';
-        }
+      const checkboxes = document.querySelectorAll('.kpi-label input[type="checkbox"]:checked');
+      const selectionTree = new Map();
 
-        async function copyJdToClipboard() {
-            if (!currentJdText) return;
+      checkboxes.forEach(cb => {
+        const bsc = cb.dataset.bsc;
+        const kra = cb.dataset.kra;
+        const kpi = cb.value;
 
-            try {
-                await navigator.clipboard.writeText(currentJdText);
-                
-                const btn = document.getElementById('btnCopyData');
-                const originalText = btn.textContent;
-                btn.textContent = "Data Captured. Transmitting...";
-                btn.disabled = true;
+        if (!selectionTree.has(bsc)) selectionTree.set(bsc, new Map());
+        const kraMap = selectionTree.get(bsc);
 
-                await logUsageToSheet();
-                
-                btn.textContent = "Data Saved";
-                setTimeout(() => {
-                    btn.textContent = originalText;
-                    btn.disabled = false;
-                    hideJdForm();
-                }, 2000);
+        if (!kraMap.has(kra)) kraMap.set(kra, []);
+        kraMap.get(kra).push(kpi);
+      });
 
-            } catch (err) {
-                console.error('Error: ', err);
-                alert('Buffer fail. Please copy manually.');
-            }
-        }
+      selectionTree.forEach((kraMap, bsc) => {
+        jdContent += `> BSC AREA: ${bsc.toUpperCase()}\n`;
+        kraMap.forEach((kpis, kra) => {
+          jdContent += `  KRA: ${kra}\n`;
+          kpis.forEach(kpi => {
+            jdContent += `       - ${kpi}\n`;
+          });
+          jdContent += `\n`;
+        });
+      });
 
-        async function logUsageToSheet() {
-            const employeeName = document.getElementById('employeeName').value.trim();
-            const employeeId = document.getElementById('employeeId').value.trim();
-            
-            if (!WEB_APP_URL || WEB_APP_URL === '') {
-                console.warn("WEB_APP_URL is empty! Log mechanism aborted.");
-                return Promise.resolve();
-            }
+      currentJdText = jdContent;
+      document.getElementById('jdOutput').textContent = jdContent;
+      document.getElementById('jdInputSection').style.display = 'none';
+      document.getElementById('jdDisplaySection').style.display = 'block';
+    }
 
-            const currentTime = new Date().toLocaleString();
-            const payload = {
-                employeeId: employeeId,
-                employeeName: employeeName,
-                timestamp: currentTime,
-                Timestamp: currentTime,
-                time: currentTime,
-                Time: currentTime
-            };
+    async function copyJdToClipboard() {
+      if (!currentJdText) return;
 
-            try {
-                await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', 
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload)
-                });
-            } catch (e) {
-                console.error("Webhook loss:", e);
-            }
-        }
+      try {
+        await navigator.clipboard.writeText(currentJdText);
 
-        document.addEventListener('DOMContentLoaded', loadFromGoogleSheet);
-    </script>
+        const btn = document.getElementById('btnCopyData');
+        const originalText = btn.textContent;
+        btn.textContent = "Data Captured. Transmitting...";
+        btn.disabled = true;
+
+        await logUsageToSheet();
+
+        btn.textContent = "Data Saved";
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.disabled = false;
+          hideJdForm();
+        }, 2000);
+
+      } catch (err) {
+        console.error('Error: ', err);
+        alert('Buffer fail. Please copy manually.');
+      }
+    }
+
+    async function logUsageToSheet() {
+      const employeeName = document.getElementById('employeeName').value.trim();
+      const employeeId = document.getElementById('employeeId').value.trim();
+
+      if (!WEB_APP_URL || WEB_APP_URL === '') {
+        console.warn("WEB_APP_URL is empty! Log mechanism aborted.");
+        return Promise.resolve();
+      }
+
+      const currentTime = new Date().toLocaleString();
+      const payload = {
+        employeeId: employeeId,
+        employeeName: employeeName,
+        timestamp: currentTime,
+        Timestamp: currentTime,
+        time: currentTime,
+        Time: currentTime
+      };
+
+      try {
+        await fetch(WEB_APP_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {
+        console.error("Webhook loss:", e);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadFromGoogleSheet);
+  </script>
 </body>
+
 </html>
