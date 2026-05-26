@@ -7,10 +7,10 @@
   <title>KRA / KPI Directory</title>
   <!-- Keep previous script injections if any -->
   <script>
-        ${ JSPDF_CONTENT }
+        
   </script>
   <script>
-        ${ JSPDF_AUTOTABLE_CONTENT }
+        
   </script>
   <style>
     :root {
@@ -891,7 +891,8 @@ background-size:400% 400%;animation:gradientShift 12s ease infinite;}
     const dash = document.getElementById('dashboard');
     dash.style.display = 'flex';
     history.replaceState(null, '', '/');
-  }, 4000);.getElementById('jdModal').style.display = 'flex';
+   }, 4000);
+   document.getElementById('jdModal').style.display = 'flex';
     }
 
     function hideJdForm() {
